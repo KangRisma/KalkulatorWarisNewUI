@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalkulator Waris Islam - Login</title>
+    <title>Kalkulator Waris Islam - Syariah Waris Indonesia</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Font Latin -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Arab -->
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --bg-color: #e0e5ec;
             --text-main: #4a5568;
-            --text-highlight: #0d9488;
+            --accent-color: #0d9488;
             --shadow-light: #ffffff;
             --shadow-dark: #a3b1c6;
         }
@@ -20,657 +24,878 @@
             font-family: 'Nunito', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            /* PROTEKSI: Mencegah seleksi teks */
-            -webkit-user-select: none; 
-            -moz-user-select: none; 
-            -ms-user-select: none; 
-            user-select: none; 
-            overflow-x: hidden; /* Prevent horizontal scroll */
+            -webkit-font-smoothing: antialiased;
+            transition: all 0.3s ease;
+            overflow: hidden; /* Prevent scrolling while locked */
         }
 
-        /* PROTEKSI: Izinkan seleksi teks HANYA pada input */
-        input, .result-card, .selectable-text {
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
-            user-select: text;
-            cursor: text;
+        /* Arabic Font Override */
+        body.lang-ar {
+            font-family: 'Tajawal', 'Amiri', sans-serif;
         }
 
-        /* --- Neumorphism Utilities --- */
+        /* Neomorphism Utility Classes */
         .neu-flat {
             background: var(--bg-color);
             box-shadow: 9px 9px 16px var(--shadow-dark), 
-                       -9px -9px 16px var(--shadow-light);
+                        -9px -9px 16px var(--shadow-light);
             border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: none;
         }
 
         .neu-pressed {
             background: var(--bg-color);
             box-shadow: inset 6px 6px 10px var(--shadow-dark), 
-                       inset -6px -6px 10px var(--shadow-light);
-            border-radius: 15px;
+                        inset -6px -6px 10px var(--shadow-light);
+            border-radius: 12px;
             border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .neu-pressed:focus {
+            outline: none;
+            box-shadow: inset 3px 3px 5px var(--shadow-dark), 
+                        inset -3px -3px 5px var(--shadow-light),
+                        0 0 5px rgba(13, 148, 136, 0.3);
+        }
+
+        .neu-icon-box {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--bg-color);
+            box-shadow: 5px 5px 10px var(--shadow-dark), 
+                        -5px -5px 10px var(--shadow-light);
+            color: var(--accent-color);
         }
 
         .neu-btn {
             background: var(--bg-color);
             box-shadow: 6px 6px 10px var(--shadow-dark), 
-                       -6px -6px 10px var(--shadow-light);
+                        -6px -6px 10px var(--shadow-light);
+            color: var(--accent-color);
+            font-weight: 700;
             border-radius: 50px;
-            color: var(--text-highlight);
-            font-weight: 800;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 30px;
+            border: none;
             cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 0.5px;
         }
 
         .neu-btn:hover {
             transform: translateY(-2px);
+            box-shadow: 8px 8px 14px var(--shadow-dark), 
+                        -8px -8px 14px var(--shadow-light);
             color: #0f766e;
         }
 
         .neu-btn:active {
             box-shadow: inset 4px 4px 8px var(--shadow-dark), 
-                       inset -4px -4px 8px var(--shadow-light);
-            transform: translateY(0);
+                        inset -4px -4px 8px var(--shadow-light);
+            transform: translateY(1px);
         }
         
-        .neu-btn-secondary {
-            color: #64748b;
+        .neu-btn.active-lang {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), 
+                        inset -4px -4px 8px var(--shadow-light);
+            color: #0f766e;
+            background-color: #d1d9e6;
         }
 
-        /* Input Specifics */
-        input[type="text"],
-        input[type="number"],
-        input[type="password"],
-        select {
-            background: var(--bg-color);
-            box-shadow: inset 5px 5px 9px var(--shadow-dark), 
-                       inset -5px -5px 9px var(--shadow-light);
-            border-radius: 12px;
-            border: none;
-            padding: 12px 16px;
-            outline: none;
-            color: var(--text-highlight);
-            font-weight: 700;
-            transition: box-shadow 0.2s ease;
-        }
-        
-        input:focus, select:focus {
-            box-shadow: inset 2px 2px 5px var(--shadow-dark), 
-                       inset -2px -2px 5px var(--shadow-light),
-                       0 0 5px rgba(13, 148, 136, 0.3);
-        }
-
-        ::placeholder {
-            color: #94a3b8;
-            font-weight: 500;
-        }
+        .neu-btn.primary { color: #0f766e; }
+        .neu-btn.secondary { color: #64748b; }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-color);
-        }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 10px;
             border: 3px solid var(--bg-color);
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Custom Overrides */
-        .result-card, .summary-card, .hijab-card {
-            background: var(--bg-color) !important;
-            box-shadow: 9px 9px 16px var(--shadow-dark), 
-                       -9px -9px 16px var(--shadow-light) !important;
-            border-radius: 20px !important;
-            border: none !important; 
-            position: relative;
-            overflow: hidden;
+        /* Styling Inputs */
+        input[type="number"], input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            color: #334155;
+            font-weight: 600;
         }
         
-        .result-card::before, .summary-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 6px;
-            background: #0d9488;
-            border-radius: 20px 0 0 20px;
-        }
-        .hijab-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 6px;
-            background: #f59e0b;
-            border-radius: 20px 0 0 20px;
-        }
-
-        /* Tooltip */
-        .tooltip-container {
-            display: inline-flex;
-            align-items: center;
-            margin-left: 6px;
-            vertical-align: middle;
-        }
-
-        .tooltip {
-            position: relative;
-            display: inline-flex; 
-            align-items: center;
-            justify-content: center;
+        input[type="checkbox"] {
+            appearance: none;
             width: 20px;
             height: 20px;
-            border-radius: 50%;
-            background-color: #cbd5e1;
-            color: #475569;
-            font-size: 0.75rem;
+            background: var(--bg-color);
+            box-shadow: inset 3px 3px 5px var(--shadow-dark), 
+                        inset -3px -3px 5px var(--shadow-light);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        input[type="checkbox"]:checked { background: var(--bg-color); }
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--accent-color);
             font-weight: bold;
-            cursor: help;
+            font-size: 14px;
         }
 
+        /* Modal & Lock Screen */
+        .payment-modal-overlay, #lockScreen {
+            background-color: rgba(224, 229, 236, 0.95); /* Opaque background for lock */
+            backdrop-filter: blur(10px);
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .payment-modal-content {
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .payment-modal-overlay.active .payment-modal-content { transform: scale(1); }
+
+        /* Tooltip */
+        .tooltip { position: relative; cursor: pointer; }
         .tooltip .tooltiptext {
             visibility: hidden;
-            width: 200px;
+            width: 240px;
             background-color: var(--bg-color);
             color: var(--text-main);
-            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
             text-align: center;
             border-radius: 10px;
             padding: 10px;
             position: absolute;
-            z-index: 50;
+            z-index: 10;
             bottom: 140%;
             left: 50%;
-            transform: translateX(-50%);
+            margin-left: -120px;
             opacity: 0;
             transition: opacity 0.3s;
-            font-size: 0.75rem;
-            font-weight: 600;
-            line-height: 1.4;
+            font-size: 0.8rem;
+            box-shadow: 5px 5px 10px var(--shadow-dark), 
+                        -5px -5px 10px var(--shadow-light);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+
+        /* Result Cards */
+        .result-card-neu { border-inline-start: 5px solid var(--accent-color); }
+        .hijab-card-neu { border-inline-start: 5px solid #f59e0b; }
+
+        /* RTL Specifics */
+        [dir="rtl"] .mr-4 { margin-right: 0; margin-left: 1rem; }
+        [dir="rtl"] .mr-3 { margin-right: 0; margin-left: 0.75rem; }
+        [dir="rtl"] .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+        [dir="rtl"] .ml-1 { margin-left: 0; margin-right: 0.25rem; }
+        [dir="rtl"] .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+        [dir="rtl"] .border-l-4 { border-left-width: 0; border-right-width: 4px; }
+        
+        /* Security */
+        body { user-select: none; -webkit-user-select: none; }
+        input, textarea { user-select: text; -webkit-user-select: text; }
+
+        /* Lock Screen Animations */
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        
+        #mainApp {
+            filter: blur(8px);
             pointer-events: none;
+            transition: filter 0.5s ease;
         }
-
-        .tooltip .tooltiptext::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: var(--bg-color) transparent transparent transparent;
+        body.unlocked #mainApp {
+            filter: none;
+            pointer-events: auto;
         }
-
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        @media (max-width: 640px) {
-            .tooltip .tooltiptext {
-                width: 180px;
-                left: auto; 
-                right: -10px;
-                transform: none;
-                bottom: 150%;
-            }
-            .tooltip .tooltiptext::after {
-                left: auto;
-                right: 15px; 
-                margin-left: 0;
-            }
-        }
-
-        /* Checkbox */
-        input[type="checkbox"] {
-            appearance: none;
-            -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            background: var(--bg-color);
-            box-shadow: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
-            border-radius: 5px;
-            cursor: pointer;
-            display: inline-grid;
-            place-content: center;
-        }
-        input[type="checkbox"]::before {
-            content: "";
-            width: 10px;
-            height: 10px;
-            transform: scale(0);
-            transition: 120ms transform ease-in-out;
-            box-shadow: inset 1em 1em #0d9488;
-            border-radius: 2px;
-            transform-origin: center;
-            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-        }
-        input[type="checkbox"]:checked {
-            box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
-        }
-        input[type="checkbox"]:checked::before {
-            transform: scale(1);
-        }
-
-        .section-title {
-            color: var(--text-highlight);
-            border-bottom: none; 
-            position: relative;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
-            height: 4px;
-            background: var(--text-highlight);
-            border-radius: 10px;
-            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.2);
-        }
-        
-        /* Login Overlay */
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg-color);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        
-        .hidden-overlay {
+        body.unlocked #lockScreen {
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
         }
+        body.unlocked {
+            overflow: auto;
+        }
     </style>
 </head>
-<!-- PROTEKSI: Mencegah klik kanan -->
-<body class="pb-10" oncontextmenu="return false;">
+<body class="min-h-screen flex flex-col" oncontextmenu="return false;">
 
-    <!-- LOGIN OVERLAY -->
-    <div id="loginOverlay" class="login-overlay">
-        <div class="neu-flat p-8 w-full max-w-md m-4 text-center transform transition-transform duration-300 hover:scale-[1.01]">
+    <!-- LOCK SCREEN OVERLAY -->
+    <div id="lockScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center px-4">
+        <div class="neu-flat p-8 w-full max-w-md text-center relative">
+            <div class="mb-6 flex justify-center">
+                <div class="neu-icon-box w-16 h-16 text-3xl">
+                    🔒
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold text-teal-700 mb-2">Akses Terbatas</h2>
+            <p class="text-slate-500 text-sm mb-6">Masukkan sandi untuk mengakses Kalkulator Waris.</p>
+            
             <div class="mb-6">
-                <div class="w-20 h-20 mx-auto bg-[#e0e5ec] rounded-full flex items-center justify-center" style="box-shadow: 9px 9px 16px var(--shadow-dark), -9px -9px 16px var(--shadow-light);">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#0d9488" class="w-10 h-10">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                    </svg>
-                </div>
-            </div>
-            <h2 class="text-2xl font-extrabold text-teal-700 mb-2">Login Aplikasi</h2>
-            <p class="text-slate-500 text-sm mb-8">Masukkan password untuk mengakses kalkulator waris.</p>
-            
-            <div class="mb-6 relative">
-                <input type="password" id="loginPassword" placeholder="Masukkan Password" class="w-full text-center text-lg py-3 px-4">
+                <input type="password" id="passwordInput" placeholder="Masukkan Sandi..." class="neu-pressed text-center text-lg">
+                <p id="passwordError" class="text-red-500 text-xs mt-2 hidden font-bold">Sandi salah, silakan coba lagi.</p>
             </div>
             
-            <button id="loginBtn" class="neu-btn py-3 px-8 w-full text-lg tracking-wide hover:text-teal-600">MASUK</button>
-            <p id="loginError" class="text-red-600 text-sm mt-4 hidden font-bold bg-red-100 py-2 rounded-lg border border-red-200 animate-pulse">Password Salah! Silakan coba lagi.</p>
-            
-            <div class="mt-8 text-xs text-slate-400">
-                &copy; Tim Syariah Waris Indonesia
-            </div>
-        </div>
-    </div>
-    
-    <!-- Header -->
-    <div class="py-10 mb-6">
-        <header class="container mx-auto px-4 text-center">
-            <div class="neu-flat inline-block px-8 py-6 rounded-3xl">
-                <h1 class="text-3xl md:text-4xl font-extrabold text-teal-700 tracking-tight">Kalkulator Waris Islami</h1>
-                <p class="text-md md:text-lg mt-2 text-slate-500 font-medium">Hitung pembagian harta sesuai syariat dengan presisi.</p>
-            </div>
-        </header>
-    </div>
-
-    <main class="container mx-auto p-4 md:p-8 max-w-6xl">
-        
-        <!-- Main Input Card -->
-        <div class="neu-flat p-6 md:p-10 mb-10">
-            <div id="inputSection">
-                <h2 class="text-2xl font-bold text-center section-title text-teal-700">Rincian Harta & Kewajiban</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    <div class="space-y-2">
-                        <label for="deceasedName" class="block text-sm font-bold text-slate-600 ml-1">Nama Almarhum/ah</label>
-                        <input type="text" id="deceasedName" placeholder="Contoh: Muhammad Ali" class="w-full">
-                    </div>
-                    <div class="space-y-2">
-                        <label for="totalHartaPeninggalan" class="block text-sm font-bold text-slate-600 ml-1">Total Harta (Rp)</label>
-                        <input type="number" id="totalHartaPeninggalan" placeholder="0" class="w-full">
-                    </div>
-                    <div class="space-y-2">
-                        <label for="hutang" class="block text-sm font-bold text-slate-600 ml-1">Hutang (Rp)</label>
-                        <input type="number" id="hutang" placeholder="0" class="w-full text-red-700" value="0">
-                    </div>
-                    <div class="space-y-2">
-                        <label for="biayaJenazah" class="block text-sm font-bold text-slate-600 ml-1">Biaya Jenazah (Rp)</label>
-                        <input type="number" id="biayaJenazah" placeholder="0" class="w-full text-red-700" value="0">
-                    </div>
-                    
-                    <!-- Wasiat Fix -->
-                    <div class="space-y-2">
-                        <div class="flex items-center flex-wrap mb-1 ml-1">
-                            <label for="wasiat" class="text-sm font-bold text-slate-600 mr-1">Wasiat (Rp)</label>
-                            <div class="tooltip-container">
-                                <div class="tooltip">
-                                    i
-                                    <span class="tooltiptext">Maksimal 1/3 dari harta bersih. Disesuaikan otomatis jika berlebih.</span>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="number" id="wasiat" placeholder="0" class="w-full text-slate-700" value="0">
-                    </div>
-
-                     <div class="space-y-2">
-                        <label for="deceasedGender" class="block text-sm font-bold text-slate-600 ml-1">Jenis Kelamin Almarhum/ah</label>
-                        <div class="relative">
-                            <select id="deceasedGender" class="w-full appearance-none text-slate-700">
-                                <option value="male">Laki-laki</option>
-                                <option value="female">Perempuan</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-teal-600">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <h2 class="text-2xl font-bold text-center section-title text-teal-700 mt-12">Informasi Ahli Waris</h2>
-                <p class="text-sm text-slate-500 mb-8 text-center italic">Centang atau isi jumlah ahli waris yang masih hidup.</p>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Template Kartu Ahli Waris -->
-                    
-                    <!-- Pasangan -->
-                    <div class="neu-flat p-5 relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
-                        <div class="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 bg-teal-100 rounded-full opacity-20 group-hover:scale-150 transition-transform"></div>
-                        <h3 class="text-lg font-extrabold text-teal-700 mb-4">Pasangan</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center space-x-3">
-                                <input type="checkbox" id="hasHusband">
-                                <label for="hasHusband" class="cursor-pointer font-semibold text-slate-600 select-none">Suami <span class="text-xs font-normal opacity-70">(jika istri wafat)</span></label>
-                            </div>
-                            <div>
-                                <label for="numWives" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Jumlah Istri</label>
-                                <input type="number" id="numWives" min="0" max="4" class="w-full" value="0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Anak -->
-                    <div class="neu-flat p-5 relative overflow-hidden hover:scale-[1.02] transition-transform duration-300">
-                        <h3 class="text-lg font-extrabold text-teal-700 mb-4">Anak Kandung</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="numSons" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Anak Laki-laki</label>
-                                <input type="number" id="numSons" min="0" class="w-full" value="0">
-                            </div>
-                            <div>
-                                <label for="numDaughters" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Anak Perempuan</label>
-                                <input type="number" id="numDaughters" min="0" class="w-full" value="0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Orang Tua -->
-                    <div class="neu-flat p-5 relative overflow-hidden hover:scale-[1.02] transition-transform duration-300">
-                        <h3 class="text-lg font-extrabold text-teal-700 mb-4">Orang Tua</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center space-x-3 p-2 rounded-xl hover:bg-slate-100/50 transition">
-                                <input type="checkbox" id="hasFather">
-                                <label for="hasFather" class="cursor-pointer font-semibold text-slate-600">Ayah Kandung</label>
-                            </div>
-                            <div class="flex items-center space-x-3 p-2 rounded-xl hover:bg-slate-100/50 transition">
-                                <input type="checkbox" id="hasMother">
-                                <label for="hasMother" class="cursor-pointer font-semibold text-slate-600">Ibu Kandung</label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Kakek & Nenek -->
-                    <div class="neu-flat p-5 hover:scale-[1.02] transition-transform duration-300">
-                        <h3 class="text-lg font-extrabold text-teal-700 mb-4">Kakek & Nenek</h3>
-                         <div class="space-y-3">
-                            <div class="flex items-center space-x-3">
-                                <input type="checkbox" id="hasPaternalGrandfather">
-                                <span class="text-sm font-semibold text-slate-600">Kakek dr Ayah</span>
-                            </div>
-                            <div class="flex items-center space-x-3">
-                                <input type="checkbox" id="hasMaternalGrandmother">
-                                <span class="text-sm font-semibold text-slate-600">Nenek dr Ibu</span>
-                            </div>
-                             <div class="flex items-center space-x-3">
-                                <input type="checkbox" id="hasPaternalGrandmother">
-                                <span class="text-sm font-semibold text-slate-600">Nenek dr Ayah</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Cucu -->
-                    <div class="neu-flat p-5 hover:scale-[1.02] transition-transform duration-300">
-                        <h3 class="text-lg font-extrabold text-teal-700 mb-4">Cucu (dari Anak Lk)</h3>
-                         <div class="space-y-4">
-                            <div>
-                                <label for="numSonSons" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Cucu Laki-laki</label>
-                                <input type="number" id="numSonSons" min="0" class="w-full" value="0">
-                            </div>
-                            <div>
-                                <label for="numSonDaughters" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Cucu Perempuan</label>
-                                <input type="number" id="numSonDaughters" min="0" class="w-full" value="0">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Saudara -->
-                    <div class="neu-flat p-5 hover:scale-[1.02] transition-transform duration-300">
-                        <h3 class="text-lg font-extrabold text-teal-700 mb-4">Saudara/i</h3>
-                        <div class="space-y-3 text-sm">
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-xs text-slate-500">Sdr Lk Kandung</label>
-                                    <input type="number" id="numFullBrothers" min="0" class="w-full" value="0">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-slate-500">Sdri Pr Kandung</label>
-                                    <input type="number" id="numFullSisters" min="0" class="w-full" value="0">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-xs text-slate-500">Sdr Lk Seayah</label>
-                                    <input type="number" id="numPaternalBrothers" min="0" class="w-full" value="0">
-                                </div>
-                                <div>
-                                    <label class="block text-xs text-slate-500">Sdri Pr Seayah</label>
-                                    <input type="number" id="numPaternalSisters" min="0" class="w-full" value="0">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs text-slate-500 mb-1">Total Sdr Seibu (Lk+Pr)</label>
-                                <input type="number" id="numUterineSiblings" min="0" class="w-full" value="0">
-                            </div>
-                        </div>
-                    </div>
-
-                     <!-- Keponakan -->
-                    <div class="neu-flat p-5 hover:scale-[1.02] transition-transform duration-300">
-                        <h3 class="text-lg font-extrabold text-teal-700 mb-4">Keponakan Laki-laki</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="numNephewsFromFullBrother" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Dr Sdr Lk Kandung</label>
-                                <input type="number" id="numNephewsFromFullBrother" min="0" class="w-full" value="0">
-                            </div>
-                            <div>
-                                <label for="numNephewsFromPaternalBrother" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Dr Sdr Lk Seayah</label>
-                                <input type="number" id="numNephewsFromPaternalBrother" min="0" class="w-full" value="0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Paman -->
-                    <div class="neu-flat p-5 hover:scale-[1.02] transition-transform duration-300">
-                        <h3 class="text-lg font-extrabold text-teal-700 mb-4">Paman (Sisi Ayah)</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="numFullPaternalUncles" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Paman Kandung</label>
-                                <input type="number" id="numFullPaternalUncles" min="0" class="w-full" value="0">
-                            </div>
-                            <div>
-                                <label for="numPaternalUnclesFromFather" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Paman Seayah</label>
-                                <input type="number" id="numPaternalUnclesFromFather" min="0" class="w-full" value="0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sepupu -->
-                    <div class="neu-flat p-5 hover:scale-[1.02] transition-transform duration-300">
-                        <h3 class="text-lg font-extrabold text-teal-700 mb-4">Sepupu Laki-laki</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="numSonsOfFullPaternalUncles" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Anak Paman Kandung</label>
-                                <input type="number" id="numSonsOfFullPaternalUncles" min="0" class="w-full" value="0">
-                            </div>
-                            <div>
-                                <label for="numSonsOfPaternalUnclesFromFather" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Anak Paman Seayah</label>
-                                <input type="number" id="numSonsOfPaternalUnclesFromFather" min="0" class="w-full" value="0">
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <div class="mt-12 text-center flex flex-col md:flex-row justify-center gap-6">
-                <button id="calculateButton" class="neu-btn py-4 px-12 text-lg md:text-xl tracking-wide">
-                    HITUNG WARISAN
-                </button>
-                <button id="resetButton" class="neu-btn neu-btn-secondary py-4 px-12 text-lg md:text-xl tracking-wide">
-                    RESET DATA
-                </button>
-            </div>
-        </div>
-
-        <!-- Results Section Container -->
-        <div id="pdfContent" class="bg-transparent"> 
-            <div id="summary" class="mt-10"></div>
-            <div id="results" class="mt-6"></div>
-            <div id="hijabSection" class="mt-6"></div>
-        </div>
-        
-        <div id="pdfButtonContainer" class="mt-12 text-center" style="display: none;">
-             <button id="savePdfButton" class="neu-btn py-4 px-10 text-emerald-700">
-                <span class="flex items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                    </svg>
-                    Simpan Hasil PDF
-                </span>
+            <button id="unlockButton" class="neu-btn primary w-full py-3 text-lg">
+                Buka Kunci
             </button>
+            
+            <p class="mt-6 text-xs text-slate-400">Syariah Waris Indonesia Security</p>
+        </div>
+    </div>
+
+    <!-- MAIN APPLICATION (Wrapped) -->
+    <div id="mainApp" class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <div class="py-6">
+            <div class="container mx-auto px-4 flex justify-between items-center">
+                <div class="w-1/4"></div> <!-- Spacer -->
+                
+                <div class="flex space-x-2 rtl:space-x-reverse">
+                    <button onclick="changeLanguage('id')" id="btn-id" class="neu-btn text-sm px-4 py-2 active-lang">ID</button>
+                    <button onclick="changeLanguage('en')" id="btn-en" class="neu-btn text-sm px-4 py-2">EN</button>
+                    <button onclick="changeLanguage('ar')" id="btn-ar" class="neu-btn text-sm px-4 py-2">عربي</button>
+                </div>
+            </div>
+
+            <header class="container mx-auto px-4 text-center mt-4">
+                <div class="neu-flat inline-block p-6 mb-4 rounded-3xl">
+                    <h1 id="appTitle" class="text-3xl md:text-5xl font-extrabold text-teal-700 tracking-tight">Kalkulator Waris Islami</h1>
+                </div>
+                <p id="appDesc" class="text-center text-md md:text-lg mt-4 text-slate-500 font-medium">Hitung pembagian harta warisan sesuai syariat Islam secara presisi.</p>
+            </header>
         </div>
 
-    </main>
+        <main class="container mx-auto p-4 md:p-8 flex-grow">
+            <div class="neu-flat p-6 md:p-10 mb-10">
+                <div id="inputSection">
+                    
+                    <!-- Harta Section -->
+                    <div class="flex items-center mb-8">
+                        <div class="neu-icon-box mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h2 id="lbl_section1" class="text-2xl font-bold text-teal-700">Rincian Harta & Kewajiban</h2>
+                    </div>
 
-    <footer class="text-center py-8 mt-10 opacity-60">
-        <p class="text-sm font-semibold">&copy; <span id="currentYear"></span> Kalkulator Waris Islami.</p>
-        <p class="text-sm mt-1 font-bold text-teal-800">Dibuat oleh Tim Syariah Waris Indonesia</p>
-    </footer>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                        <div>
+                            <label for="deceasedName" id="lbl_deceasedName" class="block text-sm font-bold text-slate-600 mb-2 ml-1">Nama Almarhum/ah:</label>
+                            <input type="text" id="deceasedName" placeholder="Contoh: Muhammad Ali" class="neu-pressed">
+                        </div>
+                        <div>
+                            <label for="totalHartaPeninggalan" id="lbl_totalHarta" class="block text-sm font-bold text-slate-600 mb-2 ml-1">Total Harta (Rp):</label>
+                            <input type="number" id="totalHartaPeninggalan" placeholder="0" class="neu-pressed">
+                        </div>
+                        <div>
+                            <label for="hutang" id="lbl_hutang" class="block text-sm font-bold text-slate-600 mb-2 ml-1">Hutang (Rp):</label>
+                            <input type="number" id="hutang" placeholder="0" class="neu-pressed" value="0">
+                        </div>
+                        <div>
+                            <label for="biayaJenazah" id="lbl_biayaJenazah" class="block text-sm font-bold text-slate-600 mb-2 ml-1">Biaya Jenazah (Rp):</label>
+                            <input type="number" id="biayaJenazah" placeholder="0" class="neu-pressed" value="0">
+                        </div>
+                        <div>
+                            <label for="wasiat" class="block text-sm font-bold text-slate-600 mb-2 ml-1 flex items-center gap-2">
+                                <span id="lbl_wasiat">Wasiat (Rp)</span>
+                                <span class="tooltip">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-teal-500">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span id="tooltip_wasiat" class="tooltiptext text-xs">Maksimal 1/3 dari harta bersih. Otomatis disesuaikan jika melebihi.</span>
+                                </span>
+                            </label>
+                            <input type="number" id="wasiat" placeholder="0" class="neu-pressed" value="0">
+                        </div>
+                        <div>
+                            <label for="deceasedGender" id="lbl_gender" class="block text-sm font-bold text-slate-600 mb-2 ml-1">Jenis Kelamin:</label>
+                            <div class="relative">
+                                <select id="deceasedGender" class="neu-pressed appearance-none cursor-pointer">
+                                    <option value="male" id="opt_male">Laki-laki</option>
+                                    <option value="female" id="opt_female">Perempuan</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 rtl:left-0 rtl:right-auto">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-    <!-- Payment Modal (Neumorphic Style) -->
-    <div id="paymentModal" class="payment-modal-overlay fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none bg-slate-900/80 backdrop-blur-sm transition-all duration-300">
-        <div class="payment-modal-content neu-flat p-8 m-4 w-full max-w-lg relative transform transition-all duration-300 scale-95">
-            <h3 class="text-2xl font-extrabold text-teal-700 mb-4 text-center">Dukungan Dakwah</h3>
-            <p class="text-slate-600 mb-6 text-center leading-relaxed">Infaq seikhlasnya untuk operasional Syariah Waris Center sebelum mengunduh PDF.</p>
+                    <!-- Ahli Waris Section -->
+                    <div class="flex items-center mb-8 mt-12">
+                        <div class="neu-icon-box mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <h2 id="lbl_section2" class="text-2xl font-bold text-teal-700">Informasi Ahli Waris</h2>
+                    </div>
+                    
+                    <p id="lbl_heirHint" class="text-sm text-slate-500 mb-6 ml-2 italic">Masukkan jumlah ahli waris. Kosongkan atau isi 0 jika tidak ada.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Pasangan -->
+                        <div class="neu-flat p-6">
+                            <h3 id="head_spouse" class="text-lg font-bold text-teal-600 mb-4">Pasangan</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="hasHusband" class="mr-3">
+                                    <label for="hasHusband" id="lbl_husband" class="text-slate-700 font-medium">Suami <span class="text-xs text-slate-500 block">(jika almarhumah perempuan)</span></label>
+                                </div>
+                                <div>
+                                    <label for="numWives" id="lbl_wives" class="block text-sm font-bold text-slate-600 mb-1">Jumlah Istri:</label>
+                                    <input type="number" id="numWives" min="0" max="4" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Anak -->
+                        <div class="neu-flat p-6">
+                            <h3 id="head_children" class="text-lg font-bold text-teal-600 mb-4">Anak Kandung</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="numSons" id="lbl_sons" class="block text-sm font-bold text-slate-600 mb-1">Anak Laki-laki:</label>
+                                    <input type="number" id="numSons" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                    <label for="numDaughters" id="lbl_daughters" class="block text-sm font-bold text-slate-600 mb-1">Anak Perempuan:</label>
+                                    <input type="number" id="numDaughters" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Orang Tua -->
+                        <div class="neu-flat p-6">
+                            <h3 id="head_parents" class="text-lg font-bold text-teal-600 mb-4">Orang Tua Kandung</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="hasFather" class="mr-3">
+                                    <label for="hasFather" id="lbl_father" class="text-slate-700 font-medium">Ayah</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="hasMother" class="mr-3">
+                                    <label for="hasMother" id="lbl_mother" class="text-slate-700 font-medium">Ibu</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Kakek & Nenek -->
+                        <div class="neu-flat p-6">
+                            <h3 id="head_grandparents" class="text-lg font-bold text-teal-600 mb-4">Kakek & Nenek</h3>
+                             <div class="space-y-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="hasPaternalGrandfather" class="mr-3">
+                                    <label for="hasPaternalGrandfather" id="lbl_p_grandfather" class="text-slate-700 font-medium leading-tight">Kakek dari Ayah <span class="text-xs text-slate-500 block mt-1">(jika Ayah tiada)</span></label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="hasMaternalGrandmother" class="mr-3">
+                                    <label for="hasMaternalGrandmother" id="lbl_m_grandmother" class="text-slate-700 font-medium leading-tight">Nenek dari Ibu <span class="text-xs text-slate-500 block mt-1">(jika Ibu tiada)</span></label>
+                                </div>
+                                 <div class="flex items-center">
+                                    <input type="checkbox" id="hasPaternalGrandmother" class="mr-3">
+                                    <label for="hasPaternalGrandmother" id="lbl_p_grandmother" class="text-slate-700 font-medium leading-tight">Nenek dari Ayah <span class="text-xs text-slate-500 block mt-1">(jika Ibu tiada)</span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cucu -->
+                        <div class="neu-flat p-6">
+                            <h3 id="head_grandads" class="text-lg font-bold text-teal-600 mb-4">Cucu (dari Anak Lk)</h3>
+                             <div class="space-y-4">
+                                <div>
+                                    <label for="numSonSons" id="lbl_sonSons" class="block text-sm font-bold text-slate-600 mb-1">Cucu Laki-laki:</label>
+                                    <input type="number" id="numSonSons" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                    <label for="numSonDaughters" id="lbl_sonDaughters" class="block text-sm font-bold text-slate-600 mb-1">Cucu Perempuan:</label>
+                                    <input type="number" id="numSonDaughters" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Saudara -->
+                        <div class="neu-flat p-6">
+                            <h3 id="head_siblings" class="text-lg font-bold text-teal-600 mb-4">Saudara-saudari</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label for="numFullBrothers" id="lbl_fullBrothers" class="block text-sm font-bold text-slate-600 mb-1">Sdr Laki Kandung:</label>
+                                    <input type="number" id="numFullBrothers" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                    <label for="numFullSisters" id="lbl_fullSisters" class="block text-sm font-bold text-slate-600 mb-1">Sdri Pr Kandung:</label>
+                                    <input type="number" id="numFullSisters" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                     <label for="numPaternalBrothers" id="lbl_paternalBrothers" class="block text-sm font-bold text-slate-600 mb-1">Sdr Laki Seayah:</label>
+                                    <input type="number" id="numPaternalBrothers" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                    <label for="numPaternalSisters" id="lbl_paternalSisters" class="block text-sm font-bold text-slate-600 mb-1">Sdri Pr Seayah:</label>
+                                    <input type="number" id="numPaternalSisters" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                    <label for="numUterineSiblings" class="block text-sm font-bold text-slate-600 mb-1 flex items-center gap-2">
+                                        <span id="lbl_uterineSiblings">Sdr Seibu (Lk & Pr):</span>
+                                        <span class="tooltip">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-teal-500">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span id="tooltip_uterine" class="tooltiptext text-xs">Total jumlah saudara & saudari seibu. Bagian mereka sama.</span>
+                                        </span>
+                                    </label>
+                                    <input type="number" id="numUterineSiblings" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                         <!-- Keponakan & Paman -->
+                        <div class="neu-flat p-6 md:col-span-2 lg:col-span-3">
+                            <h3 id="head_relatives" class="text-lg font-bold text-teal-600 mb-4">Kerabat Jauh (Hanya Laki-laki dari Garis Laki-laki)</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div>
+                                    <label for="numNephewsFromFullBrother" id="lbl_nephewFull" class="block text-sm font-bold text-slate-600 mb-1">Keponakan (dari Sdr Kandung):</label>
+                                    <input type="number" id="numNephewsFromFullBrother" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                    <label for="numNephewsFromPaternalBrother" id="lbl_nephewPaternal" class="block text-sm font-bold text-slate-600 mb-1">Keponakan (dari Sdr Seayah):</label>
+                                    <input type="number" id="numNephewsFromPaternalBrother" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                    <label for="numFullPaternalUncles" id="lbl_uncleFull" class="block text-sm font-bold text-slate-600 mb-1">Paman Kandung:</label>
+                                    <input type="number" id="numFullPaternalUncles" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                    <label for="numPaternalUnclesFromFather" id="lbl_unclePaternal" class="block text-sm font-bold text-slate-600 mb-1">Paman Seayah:</label>
+                                    <input type="number" id="numPaternalUnclesFromFather" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                    <label for="numSonsOfFullPaternalUncles" id="lbl_cousinFull" class="block text-sm font-bold text-slate-600 mb-1">Anak Paman Kandung:</label>
+                                    <input type="number" id="numSonsOfFullPaternalUncles" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                                <div>
+                                    <label for="numSonsOfPaternalUnclesFromFather" id="lbl_cousinPaternal" class="block text-sm font-bold text-slate-600 mb-1">Anak Paman Seayah:</label>
+                                    <input type="number" id="numSonsOfPaternalUnclesFromFather" min="0" placeholder="0" class="neu-pressed" value="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-10 text-center space-x-4 rtl:space-x-reverse">
+                    <button id="calculateButton" class="neu-btn primary text-lg px-10 py-4">
+                        <span class="mr-2 rtl:ml-2 rtl:mr-0">🧮</span> <span id="btn_calc">Hitung Warisan</span>
+                    </button>
+                    <button id="resetButton" class="neu-btn secondary text-lg px-10 py-4">
+                        <span class="mr-2 rtl:ml-2 rtl:mr-0">↺</span> <span id="btn_reset">Reset Data</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="pdfContent" class="rounded-2xl bg-transparent">
+                <div id="summary" class="mt-6 space-y-4"></div>
+                <div id="results" class="mt-6 space-y-4"></div>
+                <div id="hijabSection" class="mt-6"></div>
+            </div>
             
-            <div class="space-y-4 mb-8">
+            <div id="pdfButtonContainer" class="mt-10 text-center mb-10" style="display: none;">
+                 <button id="savePdfButton" class="neu-btn primary px-8 py-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 rtl:ml-2 rtl:mr-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span id="btn_pdf">Unduh Hasil PDF</span>
+                </button>
+                <p id="pdfNote" class="text-xs text-slate-400 mt-2" style="display:none">Note: PDF will be generated in Indonesian for clarity.</p>
+            </div>
+
+        </main>
+
+        <footer class="py-8 mt-auto">
+            <div class="container mx-auto px-4 text-center">
+                <div class="neu-flat inline-block px-8 py-4 rounded-xl">
+                    <p id="footer_creator" class="text-sm text-slate-600 font-semibold mb-1">Dibuat oleh : Ust Hendra & Tim Syariah Waris Indonesia</p>
+                    <p class="text-xs text-slate-400">&copy; <span id="currentYear"></span> <span id="footer_rights">Kalkulator Waris Islami. Semua Hak Dilindungi.</span></p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="payment-modal-overlay fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none">
+        <div class="payment-modal-content neu-flat p-8 m-4 w-full max-w-lg relative">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-teal-400 to-teal-600 rounded-t-2xl"></div>
+            
+            <h3 id="modal_title" class="text-2xl font-bold text-teal-700 mb-2 mt-2 text-center">Dukungan Dakwah</h3>
+            <p id="modal_desc" class="text-slate-600 text-center mb-6 text-sm">Infaq seikhlasnya untuk pengembangan sistem dan operasional Syariah Waris Indonesia.</p>
+            
+            <div class="space-y-4 mb-6">
                 <div class="neu-pressed p-4 flex justify-between items-center">
                     <div>
-                        <h4 class="font-bold text-slate-700">BSI</h4>
-                        <p class="text-sm text-slate-500">PT SYARIAH WARIS CENTER</p>
+                        <h4 class="font-bold text-slate-700">BSI (Bank Syariah Indonesia)</h4>
+                        <p class="text-sm text-slate-500">a.n PT SYARIAH WARIS CENTER</p>
                     </div>
-                    <p class="font-mono font-bold text-teal-600 text-lg select-all">8880000908</p>
+                    <p class="font-mono font-bold text-teal-600 text-lg">8880000908</p>
                 </div>
                 <div class="neu-pressed p-4 flex justify-between items-center">
                     <div>
                         <h4 class="font-bold text-slate-700">Maybank Syariah</h4>
-                        <p class="text-sm text-slate-500">SYARIAH WARIS CENTER, PT</p>
+                        <p class="text-sm text-slate-500">a.n SYARIAH WARIS CENTER, PT</p>
                     </div>
-                    <p class="font-mono font-bold text-teal-600 text-lg select-all">2.700-000524</p>
+                    <p class="font-mono font-bold text-teal-600 text-lg">2.700-000524</p>
                 </div>
             </div>
+
+            <p id="modal_quran" class="text-xs text-slate-400 text-center mb-8 italic">"Dan apa saja yang kamu infakkan, Allah akan menggantinya" (QS. Saba': 39)</p>
             
-            <div class="flex flex-col gap-3">
-                <button id="confirmPaymentButton" class="neu-btn py-3 text-teal-700">Saya Sudah Transfer & Unduh</button>
-                <button id="closeModalButton" class="neu-btn neu-btn-secondary py-3 text-sm">Tutup</button>
+            <div class="flex flex-col md:flex-row gap-3 justify-center">
+                <button id="closeModalButton" class="neu-btn secondary text-sm">Nanti Saja</button>
+                <button id="confirmPaymentButton" class="neu-btn primary text-sm">Saya Sudah Transfer & Unduh</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- PROTEKSI SCRIPT (Anti Copy/Inspect) ---
-        document.addEventListener('contextmenu', event => event.preventDefault()); // Matikan Klik Kanan
-        
-        // Blokir Shortcut Developer Tools
-        document.addEventListener('keydown', function(e) {
-            if(e.keyCode == 123) { e.preventDefault(); return false; } // F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { e.preventDefault(); return false; } // Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { e.preventDefault(); return false; } // Ctrl+Shift+C
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { e.preventDefault(); return false; } // Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { e.preventDefault(); return false; } // Ctrl+U
-        });
+        // --- LOCK SCREEN LOGIC ---
+        const correctPassword = "Bismillah_@123";
+        const passwordInput = document.getElementById('passwordInput');
+        const unlockButton = document.getElementById('unlockButton');
+        const passwordError = document.getElementById('passwordError');
+        const lockScreen = document.getElementById('lockScreen');
 
-        // --- LOGIN LOGIC ---
-        const loginOverlay = document.getElementById('loginOverlay');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginPassword = document.getElementById('loginPassword');
-        const loginError = document.getElementById('loginError');
-
-        function checkLogin() {
-            // Password: Bismillah_@123
-            if (loginPassword.value === "Bismillah_@123") {
-                loginOverlay.classList.add('hidden-overlay');
-                // Optional: Focus on name input after login
+        function checkPassword() {
+            if (passwordInput.value === correctPassword) {
+                document.body.classList.add('unlocked');
+                // Optional: Focus on first input
                 setTimeout(() => document.getElementById('deceasedName').focus(), 500);
             } else {
-                loginError.classList.remove('hidden');
-                loginPassword.value = '';
-                loginPassword.focus();
+                passwordError.classList.remove('hidden');
+                lockScreen.querySelector('div').classList.add('shake');
+                setTimeout(() => {
+                    lockScreen.querySelector('div').classList.remove('shake');
+                }, 500);
+                passwordInput.value = '';
+                passwordInput.focus();
             }
         }
 
-        loginBtn.addEventListener('click', checkLogin);
-        loginPassword.addEventListener('keypress', function(e) {
-            if(e.key === 'Enter') {
-                checkLogin();
-            }
+        unlockButton.addEventListener('click', checkPassword);
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkPassword();
         });
 
-        // --- LOGIKA HITUNGAN (TIDAK DIUBAH) ---
+        // --- EXISTING LOGIC ---
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123) return false;
+            if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+        }
+
         document.getElementById('currentYear').textContent = new Date().getFullYear();
+        const { jsPDF } = window.jspdf; 
+
+        let latestCalculationResult = null; 
+        let currentLang = 'id';
         
+        const translations = {
+            id: {
+                title: "Kalkulator Waris Islami",
+                desc: "Hitung pembagian harta warisan sesuai syariat Islam secara presisi.",
+                s1: "Rincian Harta & Kewajiban",
+                deceasedName: "Nama Almarhum/ah:",
+                totalHarta: "Total Harta (Rp):",
+                hutang: "Hutang (Rp):",
+                biayaJenazah: "Biaya Jenazah (Rp):",
+                wasiat: "Wasiat (Rp)",
+                tooltip_wasiat: "Maksimal 1/3 dari harta bersih. Otomatis disesuaikan jika melebihi.",
+                gender: "Jenis Kelamin:",
+                male: "Laki-laki",
+                female: "Perempuan",
+                s2: "Informasi Ahli Waris",
+                heirHint: "Masukkan jumlah ahli waris. Kosongkan atau isi 0 jika tidak ada.",
+                h_spouse: "Pasangan",
+                lbl_husband: "Suami (jika almarhumah perempuan)",
+                lbl_wives: "Jumlah Istri:",
+                h_children: "Anak Kandung",
+                lbl_sons: "Anak Laki-laki:",
+                lbl_daughters: "Anak Perempuan:",
+                h_parents: "Orang Tua Kandung",
+                lbl_father: "Ayah",
+                lbl_mother: "Ibu",
+                h_grandparents: "Kakek & Nenek",
+                lbl_pgf: "Kakek dari Ayah (jika Ayah tiada)",
+                lbl_mgm: "Nenek dari Ibu (jika Ibu tiada)",
+                lbl_pgm: "Nenek dari Ayah (jika Ibu tiada)",
+                h_grandads: "Cucu (dari Anak Lk)",
+                lbl_ss: "Cucu Laki-laki:",
+                lbl_sd: "Cucu Perempuan:",
+                h_siblings: "Saudara-saudari",
+                lbl_fb: "Sdr Laki Kandung:",
+                lbl_fs: "Sdri Pr Kandung:",
+                lbl_pb: "Sdr Laki Seayah:",
+                lbl_ps: "Sdri Pr Seayah:",
+                lbl_us: "Sdr Seibu (Lk & Pr):",
+                tt_us: "Total jumlah saudara & saudari seibu. Bagian mereka sama.",
+                h_relatives: "Kerabat Jauh (Hanya Laki-laki dari Garis Laki-laki)",
+                lbl_nf: "Keponakan (dari Sdr Kandung):",
+                lbl_np: "Keponakan (dari Sdr Seayah):",
+                lbl_uf: "Paman Kandung:",
+                lbl_up: "Paman Seayah:",
+                lbl_cf: "Anak Paman Kandung:",
+                lbl_cp: "Anak Paman Seayah:",
+                btn_calc: "Hitung Warisan",
+                btn_reset: "Reset Data",
+                btn_pdf: "Unduh Hasil PDF",
+                creator: "Dibuat oleh : Ust Hendra & Tim Syariah Waris Indonesia",
+                rights: "Kalkulator Waris Islami. Semua Hak Dilindungi.",
+                m_title: "Dukungan Dakwah",
+                m_desc: "Infaq seikhlasnya untuk pengembangan sistem dan operasional Syariah Waris Indonesia.",
+                m_later: "Nanti Saja",
+                m_ok: "Saya Sudah Transfer & Unduh",
+                res_title: "Hasil Pembagian",
+                sum_title: "Ringkasan Harta",
+                sum_net: "Harta Waris Bersih",
+                alert_invalid: "Input Tidak Valid! Harta harus lebih dari 0 jika ada kewajiban.",
+                alert_no_asset: "Tidak ada harta dimasukkan. Perhitungan teoritis ditampilkan.",
+                alert_insufficient: "Harta Tidak Cukup! Habis untuk hutang/biaya jenazah.",
+                alert_exhausted: "Harta Habis setelah wasiat/kewajiban.",
+                alert_no_heir: "Tidak Ada Ahli Waris yang berhak.",
+                mahjub_title: "Ahli Waris Terhalang (Mahjub)",
+                mahjub_desc: "Tidak mendapat bagian karena ada ahli waris lain yang lebih dekat:",
+                share: "Bagian",
+                amount: "Nominal",
+                placeholder_name: "Contoh: Muhammad Ali"
+            },
+            en: {
+                title: "Islamic Inheritance Calculator",
+                desc: "Calculate inheritance distribution according to Islamic Sharia accurately.",
+                s1: "Assets & Liabilities",
+                deceasedName: "Deceased Name:",
+                totalHarta: "Total Assets (Rp):",
+                hutang: "Debts (Rp):",
+                biayaJenazah: "Funeral Costs (Rp):",
+                wasiat: "Bequest/Wasiat (Rp)",
+                tooltip_wasiat: "Max 1/3 of net assets. Auto-adjusted if exceeded.",
+                gender: "Gender:",
+                male: "Male",
+                female: "Female",
+                s2: "Heirs Information",
+                heirHint: "Enter number of heirs. Leave empty or 0 if none.",
+                h_spouse: "Spouse",
+                lbl_husband: "Husband (if deceased was female)",
+                lbl_wives: "Number of Wives:",
+                h_children: "Children",
+                lbl_sons: "Sons:",
+                lbl_daughters: "Daughters:",
+                h_parents: "Parents",
+                lbl_father: "Father",
+                lbl_mother: "Mother",
+                h_grandparents: "Grandparents",
+                lbl_pgf: "Paternal Grandfather (if Father absent)",
+                lbl_mgm: "Maternal Grandmother (if Mother absent)",
+                lbl_pgm: "Paternal Grandmother (if Mother absent)",
+                h_grandads: "Grandchildren (from Son)",
+                lbl_ss: "Grandson:",
+                lbl_sd: "Granddaughter:",
+                h_siblings: "Siblings",
+                lbl_fb: "Full Brother:",
+                lbl_fs: "Full Sister:",
+                lbl_pb: "Paternal Brother:",
+                lbl_ps: "Paternal Sister:",
+                lbl_us: "Maternal Siblings (M/F):",
+                tt_us: "Total count. They share equally.",
+                h_relatives: "Distant Relatives (Male Line Only)",
+                lbl_nf: "Nephew (from Full Bro):",
+                lbl_np: "Nephew (from Pat. Bro):",
+                lbl_uf: "Full Uncle:",
+                lbl_up: "Paternal Uncle:",
+                lbl_cf: "Son of Full Uncle:",
+                lbl_cp: "Son of Pat. Uncle:",
+                btn_calc: "Calculate",
+                btn_reset: "Reset",
+                btn_pdf: "Download PDF Result",
+                creator: "Created by: Ust Hendra & Syariah Waris Indonesia Team",
+                rights: "Islamic Inheritance Calculator. All Rights Reserved.",
+                m_title: "Support Our Dawah",
+                m_desc: "Voluntary donation for system development and operations.",
+                m_later: "Maybe Later",
+                m_ok: "I Have Transferred & Download",
+                res_title: "Distribution Results",
+                sum_title: "Assets Summary",
+                sum_net: "Net Inheritance Assets",
+                alert_invalid: "Invalid Input! Assets must be > 0 if liabilities exist.",
+                alert_no_asset: "No assets entered. Theoretical calculation shown.",
+                alert_insufficient: "Insufficient Assets! Consumed by debts/funeral costs.",
+                alert_exhausted: "Assets Exhausted after bequest/liabilities.",
+                alert_no_heir: "No eligible heirs found.",
+                mahjub_title: "Blocked Heirs (Mahjub)",
+                mahjub_desc: "Blocked by closer relatives:",
+                share: "Share",
+                amount: "Amount",
+                placeholder_name: "Ex: Muhammad Ali"
+            },
+            ar: {
+                title: "حاسبة الميراث الإسلامي",
+                desc: "حساب تقسيم الميراث وفق الشريعة الإسلامية بدقة.",
+                s1: "تفاصيل التركة والالتزامات",
+                deceasedName: "اسم المتوفى:",
+                totalHarta: "إجمالي التركة (روبية):",
+                hutang: "الديون:",
+                biayaJenazah: "تكاليف الجنازة:",
+                wasiat: "الوصية",
+                tooltip_wasiat: "بحد أقصى 1/3 من التركة الصافية.",
+                gender: "الجنس:",
+                male: "ذكر",
+                female: "أنثى",
+                s2: "معلومات الورثة",
+                heirHint: "أدخل عدد الورثة. اترك فارغًا أو 0 إذا لم يوجد.",
+                h_spouse: "الزوج / الزوجة",
+                lbl_husband: "الزوج (إذا كان المتوفى أنثى)",
+                lbl_wives: "عدد الزوجات:",
+                h_children: "الأولاد",
+                lbl_sons: "الابن:",
+                lbl_daughters: "البنت:",
+                h_parents: "الوالدان",
+                lbl_father: "الأب",
+                lbl_mother: "الأم",
+                h_grandparents: "الجد والجدة",
+                lbl_pgf: "الجد لأب (عند عدم وجود الأب)",
+                lbl_mgm: "الجدة لأم (عند عدم وجود الأم)",
+                lbl_pgm: "الجدة لأب (عند عدم وجود الأم)",
+                h_grandads: "الأحفاد (من الابن)",
+                lbl_ss: "ابن الابن:",
+                lbl_sd: "بنت الابن:",
+                h_siblings: "الإخوة والأخوات",
+                lbl_fb: "الأخ الشقيق:",
+                lbl_fs: "الأخت الشقيقة:",
+                lbl_pb: "الأخ لأب:",
+                lbl_ps: "الأخت لأب:",
+                lbl_us: "الإخوة لأم (ذكور وإناث):",
+                tt_us: "العدد الإجمالي. يتقاسمون بالتساوي.",
+                h_relatives: "العصبات (الذكور فقط)",
+                lbl_nf: "ابن الأخ الشقيق:",
+                lbl_np: "ابن الأخ لأب:",
+                lbl_uf: "العم الشقيق:",
+                lbl_up: "العم لأب:",
+                lbl_cf: "ابن العم الشقيق:",
+                lbl_cp: "ابن العم لأب:",
+                btn_calc: "حساب الميراث",
+                btn_reset: "إعادة تعيين",
+                btn_pdf: "تحميل النتيجة PDF",
+                creator: "تم إنشاؤه بواسطة: الأستاذ هندرا وفريق إرث الشريعة الإندونيسي",
+                rights: "حاسبة الميراث الإسلامي. جميع الحقوق محفوظة.",
+                m_title: "دعم الدعوة",
+                m_desc: "تبرع طوعي لتطوير النظام والعمليات.",
+                m_later: "ربما لاحقا",
+                m_ok: "لقد قمت بالتحويل وتحميل",
+                res_title: "نتائج التوزيع",
+                sum_title: "ملخص التركة",
+                sum_net: "صافي التركة للميراث",
+                alert_invalid: "إدخال غير صالح! يجب أن تكون التركة > 0.",
+                alert_no_asset: "لم يتم إدخال أصول. يظهر الحساب النظري.",
+                alert_insufficient: "التركة لا تكفي! استهلكتها الديون.",
+                alert_exhausted: "نفدت التركة بعد الوصية.",
+                alert_no_heir: "لا يوجد ورثة مستحقون.",
+                mahjub_title: "الورثة المحجوبون",
+                mahjub_desc: "لا يرثون لوجود من هو أقرب منهم:",
+                share: "الحصة",
+                amount: "المقدار",
+                placeholder_name: "مثال: محمد علي"
+            }
+        };
+
+        const pdfLabels = {
+            husband: "Suami",
+            wives: "Istri",
+            sons: "Anak Laki-laki",
+            daughters: "Anak Perempuan",
+            father: "Ayah",
+            mother: "Ibu",
+            paternalGrandfather: "Kakek (dari Ayah)",
+            maternalGrandmother: "Nenek (dari Ibu)",
+            paternalGrandmother: "Nenek (dari Ayah)",
+            sonSons: "Cucu Laki-laki",
+            sonDaughters: "Cucu Perempuan",
+            fullBrothers: "Sdr Laki Kandung",
+            fullSisters: "Sdri Perempuan Kandung",
+            paternalBrothers: "Sdr Laki Seayah",
+            paternalSisters: "Sdri Perempuan Seayah",
+            uterineSiblings: "Sdr Seibu",
+            nephewsFromFullBrother: "Keponakan (Sdr Kandung)",
+            nephewsFromPaternalBrother: "Keponakan (Sdr Seayah)",
+            fullPaternalUncles: "Paman Kandung",
+            paternalUnclesFromFather: "Paman Seayah",
+            sonsOfFullPaternalUncles: "Anak Paman Kandung",
+            sonsOfPaternalUnclesFromFather: "Anak Paman Seayah",
+            musytarakahGroup: "Musytarakah"
+        };
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const d = translations[lang];
+            const isAr = lang === 'ar';
+
+            document.body.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+            document.body.className = isAr ? 'min-h-screen flex flex-col lang-ar' : 'min-h-screen flex flex-col';
+
+            ['id', 'en', 'ar'].forEach(l => {
+                const btn = document.getElementById(`btn-${l}`);
+                if(l === lang) btn.classList.add('active-lang');
+                else btn.classList.remove('active-lang');
+            });
+
+            const mapping = {
+                appTitle: 'title', appDesc: 'desc', lbl_section1: 's1', lbl_deceasedName: 'deceasedName',
+                lbl_totalHarta: 'totalHarta', lbl_hutang: 'hutang', lbl_biayaJenazah: 'biayaJenazah',
+                lbl_wasiat: 'wasiat', tooltip_wasiat: 'tooltip_wasiat', lbl_gender: 'gender',
+                opt_male: 'male', opt_female: 'female', lbl_section2: 's2', lbl_heirHint: 'heirHint',
+                head_spouse: 'h_spouse', lbl_husband: 'lbl_husband', lbl_wives: 'lbl_wives',
+                head_children: 'h_children', lbl_sons: 'lbl_sons', lbl_daughters: 'lbl_daughters',
+                head_parents: 'h_parents', lbl_father: 'lbl_father', lbl_mother: 'lbl_mother',
+                head_grandparents: 'h_grandparents', lbl_p_grandfather: 'lbl_pgf', lbl_m_grandmother: 'lbl_mgm', lbl_p_grandmother: 'lbl_pgm',
+                head_grandads: 'h_grandads', lbl_sonSons: 'lbl_ss', lbl_sonDaughters: 'lbl_sd',
+                head_siblings: 'h_siblings', lbl_fullBrothers: 'lbl_fb', lbl_fullSisters: 'lbl_fs',
+                lbl_paternalBrothers: 'lbl_pb', lbl_paternalSisters: 'lbl_ps', lbl_uterineSiblings: 'lbl_us', tooltip_uterine: 'tt_us',
+                head_relatives: 'h_relatives', lbl_nephewFull: 'lbl_nf', lbl_nephewPaternal: 'lbl_np',
+                lbl_uncleFull: 'lbl_uf', lbl_unclePaternal: 'lbl_up', lbl_cousinFull: 'lbl_cf', lbl_cousinPaternal: 'lbl_cp',
+                btn_calc: 'btn_calc', btn_reset: 'btn_reset', btn_pdf: 'btn_pdf',
+                footer_creator: 'creator', footer_rights: 'rights',
+                modal_title: 'm_title', modal_desc: 'm_desc', closeModalButton: 'm_later', confirmPaymentButton: 'm_ok'
+            };
+
+            for(const [id, key] of Object.entries(mapping)) {
+                const el = document.getElementById(id);
+                if(el) {
+                    if(el.tagName === 'INPUT') el.placeholder = d[key];
+                    else el.innerHTML = d[key]; 
+                }
+            }
+            document.getElementById('deceasedName').placeholder = d.placeholder_name;
+            document.getElementById('pdfNote').style.display = isAr ? 'block' : 'none';
+
+            if(document.getElementById('results').innerHTML !== '') {
+                document.getElementById('calculateButton').click();
+            }
+        }
+
         function getNumValue(id) {
             const val = parseFloat(document.getElementById(id).value);
             return isNaN(val) || val < 0 ? 0 : val;
@@ -685,223 +910,8 @@
             return document.getElementById(id).checked;
         }
         
-        const EPSILON = 1e-9; 
-        
-        // Function to generate and save PDF
-        function generateAndSavePdf() {
-            const { jsPDF } = window.jspdf;
-            const deceasedName = document.getElementById('deceasedName').value || "Almarhum/ah";
-            const pdfDoc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-            
-            pdfDoc.setFontSize(18);
-            pdfDoc.text("Laporan Perhitungan Waris Islami", pdfDoc.internal.pageSize.getWidth() / 2, 20, { align: 'center' });
-            pdfDoc.setFontSize(10);
-            pdfDoc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric'})}`, pdfDoc.internal.pageSize.getWidth() / 2, 28, { align: 'center' });
-
-            let yPosition = 40; 
-            const leftMargin = 15;
-            const contentWidth = pdfDoc.internal.pageSize.getWidth() - (2 * leftMargin);
-            const valueIndent = leftMargin + 75; 
-            const lineHeight = 6; 
-            const paragraphSpacing = 3; 
-            const sectionSpacing = 8;
-
-            function addWrappedTextToPdf(text, x, currentY, options = {}) { 
-                const maxWidth = options.maxWidth || contentWidth;
-                const fontStyle = options.fontStyle || 'normal';
-                const fontSize = options.fontSize || 10;
-                pdfDoc.setFontSize(fontSize);
-                pdfDoc.setFont(undefined, fontStyle);
-
-                const lines = pdfDoc.splitTextToSize(text, maxWidth);
-                if (currentY + (lines.length * lineHeight) + paragraphSpacing > (pdfDoc.internal.pageSize.getHeight() - 15)) { 
-                    pdfDoc.addPage();
-                    currentY = 20;
-                }
-                
-                const align = options.align || 'left';
-                pdfDoc.text(lines, x, currentY, { align: align });
-
-                return currentY + (lines.length * lineHeight);
-            }
-            
-            function addLineToPdf(currentY) { 
-                 if (currentY + lineHeight > (pdfDoc.internal.pageSize.getHeight() - 15)) { pdfDoc.addPage(); currentY = 20;}
-                 pdfDoc.line(leftMargin, currentY, pdfDoc.internal.pageSize.getWidth() - leftMargin, currentY);
-                 return currentY + lineHeight / 2;
-            }
-            
-            // Add deceased name to the PDF report
-            yPosition = addWrappedTextToPdf(`Nama Almarhum/ah: ${deceasedName}`, leftMargin, yPosition, {fontStyle: 'bold', fontSize: 12});
-            yPosition += sectionSpacing;
-
-            yPosition = addWrappedTextToPdf("Ringkasan Harta & Kewajiban:", leftMargin, yPosition, {fontStyle: 'bold', fontSize: 12});
-            yPosition += 2; 
-
-            const summaryElements = document.querySelectorAll('#summary .summary-card p');
-            summaryElements.forEach(p => {
-                const textContent = p.innerText;
-                const parts = textContent.split(': ');
-                if (parts.length === 2) {
-                    let label = parts[0] + ":";
-                    let value = parts[1];
-                    let currentLineY = yPosition;
-                    currentLineY = addWrappedTextToPdf(label, leftMargin, currentLineY, {maxWidth: valueIndent - leftMargin - 5});
-                    let valueY = addWrappedTextToPdf(value, valueIndent, yPosition, {maxWidth: contentWidth - (valueIndent - leftMargin)});
-                    yPosition = Math.max(currentLineY, valueY) + paragraphSpacing/2;
-
-                } else {
-                     yPosition = addWrappedTextToPdf(textContent, leftMargin, yPosition, {maxWidth: contentWidth}) + paragraphSpacing/2;
-                }
-            });
-            const hrSummary = document.querySelector('#summary .summary-card hr');
-            if(hrSummary) yPosition = addLineToPdf(yPosition);
-
-            yPosition += sectionSpacing;
-            
-            yPosition = addWrappedTextToPdf("Informasi Ahli Waris Utama:", leftMargin, yPosition, {fontStyle: 'bold', fontSize: 12});
-            yPosition += 2;
-
-            const deceasedGenderText = document.getElementById('deceasedGender').value === 'male' ? 'Laki-laki' : 'Perempuan';
-            yPosition = addWrappedTextToPdf(`Jenis Kelamin Almarhum/ah: ${deceasedGenderText}`, leftMargin, yPosition);
-
-            const heirSummaryForPdf = [
-                { condition: document.getElementById('deceasedGender').value === 'female' && getCheckboxValue('hasHusband'), label: "Suami: Ada" },
-                { condition: document.getElementById('deceasedGender').value === 'male' && getIntValue('numWives') > 0, label: `Istri: ${getIntValue('numWives')} orang` },
-                { condition: getIntValue('numSons') > 0, label: `Anak Laki-laki: ${getIntValue('numSons')} orang` },
-                { condition: getIntValue('numDaughters') > 0, label: `Anak Perempuan: ${getIntValue('numDaughters')} orang` },
-                { condition: getCheckboxValue('hasFather'), label: "Ayah: Ada" },
-                { condition: getCheckboxValue('hasMother'), label: "Ibu: Ada" },
-                { condition: getIntValue('numFullBrothers') > 0, label: `Sdr Lk Kandung: ${getIntValue('numFullBrothers')} orang` },
-                { condition: getIntValue('numNephewsFromFullBrother') > 0, label: `Keponakan Lk dari Sdr Lk Kandung: ${getIntValue('numNephewsFromFullBrother')} orang` },
-                { condition: getIntValue('numFullPaternalUncles') > 0, label: `Paman Kandung: ${getIntValue('numFullPaternalUncles')} orang` },
-                { condition: getIntValue('numSonsOfFullPaternalUncles') > 0, label: `Anak Lk dari Paman Kandung: ${getIntValue('numSonsOfFullPaternalUncles')} orang` },
-            ];
-            heirSummaryForPdf.forEach(item => {
-                if (item.condition) { yPosition = addWrappedTextToPdf(item.label, leftMargin, yPosition); }
-            });
-            yPosition += paragraphSpacing;
-            
-            yPosition += sectionSpacing;
-
-            const resultsTitleElement = document.querySelector('#results > h2');
-            if (resultsTitleElement) {
-                yPosition = addWrappedTextToPdf(resultsTitleElement.innerText, leftMargin, yPosition, {fontStyle: 'bold', fontSize: 12});
-                yPosition += 2;
-            }
-
-            const resultCards = document.querySelectorAll('#results .result-card, #results .bg-yellow-100, #results .bg-indigo-100, #results .bg-sky-100');
-            if (resultCards.length > 0) {
-                resultCards.forEach(card => {
-                    if (yPosition > (pdfDoc.internal.pageSize.getHeight() - 45)) { pdfDoc.addPage(); yPosition = 20; } 
-                    if (card.classList.contains('result-card')) {
-                        const heirName = card.querySelector('h4').innerText;
-                        const note = card.querySelector('.text-slate-600').innerText;
-                        const shareText = card.querySelectorAll('.text-md')[0].innerText; 
-                        const amountText = card.querySelectorAll('.text-md')[1].innerText; 
-
-                        yPosition = addWrappedTextToPdf(heirName, leftMargin, yPosition, {fontStyle: 'bold'});
-                        if (note) { 
-                            yPosition = addWrappedTextToPdf(`  Catatan: ${note}`, leftMargin + 3, yPosition, {maxWidth: contentWidth - 8});
-                        }
-                        yPosition = addWrappedTextToPdf(`  ${shareText}`, leftMargin + 3, yPosition, {maxWidth: contentWidth - 8});
-                        yPosition = addWrappedTextToPdf(`  ${amountText}`, leftMargin + 3, yPosition, {maxWidth: contentWidth - 8});
-                    } else { 
-                        yPosition = addWrappedTextToPdf(card.innerText.replace(/\n/g, ' '), leftMargin, yPosition, {fontStyle: 'italic'});
-                    }
-                    yPosition += paragraphSpacing; 
-                });
-            } else {
-                 const noHeirMessage = document.querySelector('#results .bg-yellow-100, #results .bg-blue-100');
-                 if (noHeirMessage) {
-                    yPosition = addWrappedTextToPdf(noHeirMessage.innerText, leftMargin, yPosition, {maxWidth: contentWidth});
-                    yPosition += paragraphSpacing;
-                 }
-            }
-
-            const hijabSection = document.getElementById('hijabSection');
-            if(hijabSection && hijabSection.innerText.trim() !== '') {
-                const hijabTitle = hijabSection.querySelector('h4')?.innerText;
-                const hijabNote = hijabSection.querySelector('p')?.innerText;
-                const hijabItems = Array.from(hijabSection.querySelectorAll('li')).map(li => li.innerText);
-                
-                yPosition += sectionSpacing;
-                if (yPosition > (pdfDoc.internal.pageSize.getHeight() - 45)) { pdfDoc.addPage(); yPosition = 20; }
-                yPosition = addWrappedTextToPdf(hijabTitle, leftMargin, yPosition, {fontStyle: 'bold', fontSize: 12});
-                yPosition = addWrappedTextToPdf(hijabNote, leftMargin, yPosition, {fontStyle: 'italic', fontSize: 9});
-                yPosition += 2;
-                hijabItems.forEach(item => {
-                    yPosition = addWrappedTextToPdf(`- ${item}`, leftMargin + 3, yPosition, {maxWidth: contentWidth - 4});
-                });
-                yPosition += paragraphSpacing;
-            }
-
-
-            const finalSummaryDiv = document.querySelector('#results .bg-teal-50');
-            if (finalSummaryDiv) {
-                if (yPosition > (pdfDoc.internal.pageSize.getHeight() - 30)) { pdfDoc.addPage(); yPosition = 20; }
-                yPosition += lineHeight/2;
-                yPosition = addLineToPdf(yPosition);
-                const lines = finalSummaryDiv.innerText.split('\n');
-                lines.forEach(line => {
-                    yPosition = addWrappedTextToPdf(line, leftMargin, yPosition, {maxWidth: contentWidth});
-                });
-                yPosition += paragraphSpacing;
-            }
-
-            // Add Dalil Section
-            yPosition += sectionSpacing;
-            if (yPosition > (pdfDoc.internal.pageSize.getHeight() - 60)) { pdfDoc.addPage(); yPosition = 20; }
-            yPosition = addWrappedTextToPdf("Dalil/Dasar Hukum Waris (Ringkas)", leftMargin, yPosition, {fontStyle: 'bold', fontSize: 12});
-            yPosition += 2;
-            
-            pdfDoc.setFont(undefined, 'bold');
-            yPosition = addWrappedTextToPdf("Q.S. An-Nisa': 7", leftMargin, yPosition, {fontSize: 9});
-            pdfDoc.setFont(undefined, 'normal');
-            yPosition = addWrappedTextToPdf("Bagi laki-laki ada hak bagian dari harta peninggalan orang tua dan kerabatnya, dan bagi perempuan ada hak bagian (pula) dari harta peninggalan orang tua dan kerabatnya, baik sedikit atau banyak menurut bagian yang telah ditetapkan.", leftMargin + 2, yPosition, {fontSize: 9, maxWidth: contentWidth - 4});
-            yPosition += paragraphSpacing;
-
-            pdfDoc.setFont(undefined, 'bold');
-            yPosition = addWrappedTextToPdf("Q.S. An-Nisa': 11", leftMargin, yPosition, {fontSize: 9});
-            pdfDoc.setFont(undefined, 'normal');
-            yPosition = addWrappedTextToPdf("Allah mensyariatkan kepadamu tentang (pembagian warisan untuk) anak-anakmu, (yaitu) bagian seorang anak laki-laki sama dengan bagian dua orang anak perempuan...", leftMargin + 2, yPosition, {fontSize: 9, maxWidth: contentWidth - 4});
-            yPosition += paragraphSpacing;
-            
-            pdfDoc.setFont(undefined, 'bold');
-            yPosition = addWrappedTextToPdf("Q.S. An-Nisa': 12", leftMargin, yPosition, {fontSize: 9});
-            pdfDoc.setFont(undefined, 'normal');
-            yPosition = addWrappedTextToPdf("Dan bagimu (suami-suami) seperdua dari harta yang ditinggalkan oleh istri-istrimu, jika mereka tidak mempunyai anak. Jika mereka (istri-istrimu itu) mempunyai anak, maka kamu mendapat seperempat...", leftMargin + 2, yPosition, {fontSize: 9, maxWidth: contentWidth - 4});
-
-            // Position footer
-            let footerStartY = pdfDoc.internal.pageSize.getHeight() - 30; // Reserve space for footer
-            if (yPosition > footerStartY) { 
-                pdfDoc.addPage();
-                yPosition = pdfDoc.internal.pageSize.getHeight() - 30; 
-            } else {
-                 yPosition = footerStartY;
-            }
-            
-            // Add a line above the footer for separation
-            pdfDoc.line(leftMargin, yPosition - 2, pdfDoc.internal.pageSize.getWidth() - leftMargin, yPosition - 2);
-
-            const appCreatorText = "Dibuat oleh Tim Syariah Waris Indonesia";
-            const contactText = "Untuk konsultasi lebih lanjut, hubungi Syariah Waris Center: +62 852-1072-2550";
-            const disclaimerLine1 = "Penting: Hasil perhitungan ini bersifat estimasi dan sebagai panduan awal.";
-            const disclaimerLine2 = "Untuk keputusan final dan kasus yang kompleks, sangat disarankan untuk berkonsultasi langsung";
-            const disclaimerLine3 = "dengan ahli fiqih atau ulama yang kompeten dalam masalah waris.";
-
-            pdfDoc.setFontSize(8);
-            yPosition = addWrappedTextToPdf(appCreatorText, leftMargin, yPosition, { lineHeightFactor: 1 });
-            yPosition = addWrappedTextToPdf(contactText, leftMargin, yPosition, { lineHeightFactor: 1 });
-            yPosition += 2; 
-            yPosition = addWrappedTextToPdf(disclaimerLine1, leftMargin, yPosition, { lineHeightFactor: 1 });
-            yPosition = addWrappedTextToPdf(disclaimerLine2, leftMargin, yPosition, { lineHeightFactor: 1 });
-            yPosition = addWrappedTextToPdf(disclaimerLine3, leftMargin, yPosition, { lineHeightFactor: 1 });
-
-            pdfDoc.save('Laporan_Penetapan_Hak_Waris.pdf');
-        }
-
         document.getElementById('calculateButton').addEventListener('click', function() {
+            const langData = translations[currentLang];
             const deceasedName = document.getElementById('deceasedName').value || "Almarhum/ah";
             const totalHartaPeninggalan = getNumValue('totalHartaPeninggalan');
             const hutang = getNumValue('hutang');
@@ -912,24 +922,27 @@
             const resultsDiv = document.getElementById('results');
             const hijabDiv = document.getElementById('hijabSection');
             const pdfButtonContainer = document.getElementById('pdfButtonContainer');
+            
             summaryDiv.innerHTML = '';
             resultsDiv.innerHTML = '';
             hijabDiv.innerHTML = '';
             pdfButtonContainer.style.display = 'none';
 
+            latestCalculationResult = null;
+
             if (totalHartaPeninggalan <= 0 && (hutang > 0 || biayaJenazah > 0 || wasiatInput > 0)) {
-                 summaryDiv.innerHTML = `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-md" role="alert"><p class="font-bold">Input Tidak Valid!</p><p>Total harta peninggalan harus lebih besar dari nol jika ada kewajiban.</p></div>`;
+                 summaryDiv.innerHTML = `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-md" role="alert"><p class="font-bold">${langData.alert_invalid}</p></div>`;
                 return;
             }
              if (totalHartaPeninggalan <= 0 && hutang <= 0 && biayaJenazah <= 0 && wasiatInput <=0) {
-                 summaryDiv.innerHTML = `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md shadow-md" role="alert"><p class="font-bold">Informasi!</p><p>Tidak ada harta peninggalan yang dimasukkan. Perhitungan teoritis akan ditampilkan jika ada ahli waris.</p></div>`;
+                 summaryDiv.innerHTML = `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md shadow-md" role="alert"><p class="font-bold">${langData.alert_no_asset}</p></div>`;
             }
 
             let hartaSetelahBiayaDanHutang = totalHartaPeninggalan - hutang - biayaJenazah;
             let wasiatMessage = "";
 
             if (hartaSetelahBiayaDanHutang < 0) {
-                summaryDiv.innerHTML = `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-md" role="alert"><p class="font-bold">Harta Tidak Cukup!</p><p>Harta peninggalan tidak mencukupi untuk membayar hutang dan biaya pengurusan jenazah. Tidak ada sisa untuk wasiat atau warisan.</p></div>`;
+                summaryDiv.innerHTML = `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md shadow-md" role="alert"><p class="font-bold">${langData.alert_insufficient}</p></div>`;
                 pdfButtonContainer.style.display = 'block'; 
                 return;
             }
@@ -939,37 +952,35 @@
 
             if (wasiatInput > maksWasiat) {
                 wasiatSebenarnya = maksWasiat;
-                wasiatMessage = ` (Wasiat disesuaikan menjadi Rp ${wasiatSebenarnya.toLocaleString('id-ID',{minimumFractionDigits: 0, maximumFractionDigits: 2})} karena melebihi 1/3 sisa harta)`;
+                wasiatMessage = " (*)";
             }
             
             wasiatSebenarnya = Math.min(wasiatSebenarnya, hartaSetelahBiayaDanHutang);
-            
             const estateValue = hartaSetelahBiayaDanHutang - wasiatSebenarnya;
 
             summaryDiv.innerHTML = `
-                <div class="summary-card p-6 mb-6">
-                    <h3 class="text-xl font-bold text-teal-700 mb-4 border-b border-slate-200 pb-2">Ringkasan Perhitungan</h3>
-                    <div class="space-y-2 text-sm md:text-base selectable-text">
-                        <div class="flex justify-between"><span>Total Harta:</span> <span class="font-medium">Rp ${totalHartaPeninggalan.toLocaleString('id-ID',{minimumFractionDigits: 0, maximumFractionDigits: 2})}</span></div>
-                        <div class="flex justify-between text-red-600"><span>Hutang:</span> <span class="font-medium">- Rp ${hutang.toLocaleString('id-ID',{minimumFractionDigits: 0, maximumFractionDigits: 2})}</span></div>
-                        <div class="flex justify-between text-red-600"><span>Biaya Jenazah:</span> <span class="font-medium">- Rp ${biayaJenazah.toLocaleString('id-ID',{minimumFractionDigits: 0, maximumFractionDigits: 2})}</span></div>
-                        <div class="flex justify-between border-t border-slate-200 pt-2"><span>Sisa (Netto):</span> <span class="font-medium">Rp ${hartaSetelahBiayaDanHutang.toLocaleString('id-ID',{minimumFractionDigits: 0, maximumFractionDigits: 2})}</span></div>
-                        <div class="flex justify-between text-slate-600"><span>Wasiat:</span> <span class="font-medium">- Rp ${wasiatSebenarnya.toLocaleString('id-ID',{minimumFractionDigits: 0, maximumFractionDigits: 2})}</span></div>
-                        ${wasiatMessage ? `<p class="text-xs text-slate-500 italic mt-1">${wasiatMessage}</p>` : ''}
-                        <div class="mt-4 pt-3 border-t-2 border-teal-100">
-                            <p class="text-lg font-bold text-teal-700 text-center">Warisan Dibagikan:<br>Rp ${(estateValue < 0 ? 0 : estateValue).toLocaleString('id-ID',{minimumFractionDigits: 0, maximumFractionDigits: 2})}</p>
-                        </div>
+                <div class="neu-flat p-6 mb-4 rounded-lg">
+                    <h3 class="text-xl font-bold text-teal-700 mb-4 border-b border-gray-300 pb-2">${langData.sum_title}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                        <p>${langData.totalHarta}</p> <p class="font-bold text-right">Rp ${totalHartaPeninggalan.toLocaleString('id-ID')}</p>
+                        <p>${langData.hutang}</p> <p class="font-bold text-right text-red-500">- Rp ${hutang.toLocaleString('id-ID')}</p>
+                        <p>${langData.biayaJenazah}</p> <p class="font-bold text-right text-red-500">- Rp ${biayaJenazah.toLocaleString('id-ID')}</p>
+                        <p>${langData.wasiat}</p> <p class="font-bold text-right text-orange-500">- Rp ${wasiatSebenarnya.toLocaleString('id-ID')}${wasiatMessage}</p>
+                    </div>
+                    <hr class="my-3 border-slate-300">
+                    <div class="flex justify-between items-center">
+                        <p class="font-bold text-teal-600 text-lg">${langData.sum_net}:</p>
+                        <p class="font-extrabold text-teal-700 text-xl">Rp ${(estateValue < 0 ? 0 : estateValue).toLocaleString('id-ID',{minimumFractionDigits: 0, maximumFractionDigits: 2})}</p>
                     </div>
                 </div>
             `;
 
             if (estateValue < EPSILON && totalHartaPeninggalan > 0) {
-                 summaryDiv.innerHTML += `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md shadow-md mt-2" role="alert"><p class="font-bold">Harta Habis!</p><p>Harta peninggalan habis setelah pemenuhan hutang, biaya jenazah, dan wasiat. Tidak ada sisa untuk warisan.</p></div>`;
+                 summaryDiv.innerHTML += `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md shadow-md mt-2" role="alert"><p class="font-bold">${langData.alert_exhausted}</p></div>`;
                 pdfButtonContainer.style.display = 'block'; 
                 return;
             }
             
-            // Get heir data
             const deceasedGender = document.getElementById('deceasedGender').value;
             const hasHusband = deceasedGender === 'female' && getCheckboxValue('hasHusband');
             const numWives = deceasedGender === 'male' ? getIntValue('numWives') : 0;
@@ -977,20 +988,16 @@
             const numDaughters = getIntValue('numDaughters');
             const hasFatherState = getCheckboxValue('hasFather'); 
             const hasMotherState = getCheckboxValue('hasMother'); 
-            
             const hasPaternalGrandfather = !hasFatherState && getCheckboxValue('hasPaternalGrandfather');
             const hasMaternalGrandmother = !hasMotherState && getCheckboxValue('hasMaternalGrandmother');
             const hasPaternalGrandmother = !hasMotherState && getCheckboxValue('hasPaternalGrandmother'); 
-
             const numSonSons = getIntValue('numSonSons');
             const numSonDaughters = getIntValue('numSonDaughters');
-
             const numFullBrothers = getIntValue('numFullBrothers');
             const numFullSisters = getIntValue('numFullSisters');
             const numPaternalBrothers = getIntValue('numPaternalBrothers');
             const numPaternalSisters = getIntValue('numPaternalSisters');
             const numUterineSiblings = getIntValue('numUterineSiblings'); 
-
             const numNephewsFromFullBrother = getIntValue('numNephewsFromFullBrother');
             const numNephewsFromPaternalBrother = getIntValue('numNephewsFromPaternalBrother');
             const numFullPaternalUncles = getIntValue('numFullPaternalUncles');
@@ -998,13 +1005,10 @@
             const numSonsOfFullPaternalUncles = getIntValue('numSonsOfFullPaternalUncles');
             const numSonsOfPaternalUnclesFromFather = getIntValue('numSonsOfPaternalUnclesFromFather');
 
-
             let heirs = {}; 
-            let initialTotalFixedShares = 0; 
             let totalFixedShares = 0; 
             let faraidRemainingPortion = 1.0; 
 
-            // --- Helper Booleans ---
             const hasChildren = numSons > 0 || numDaughters > 0;
             const hasSon = numSons > 0;
             const hasGrandChildrenFromSon = numSonSons > 0 || numSonDaughters > 0;
@@ -1017,534 +1021,221 @@
             const isGharawainCase = hasMotherState && hasFatherState && (hasHusband || numWives > 0) && !hasDescendants && numSiblingsTotal < 2;
             const isMusytarakahCase = hasHusband && hasMotherState && numUterineSiblings >= 2 && numTotalFullSiblings > 0 && !hasDescendants && !hasFatherState && !hasPaternalGrandfather;
             
-            const hasSonSons = numSonSons > 0;
-            
-            // --- Logic for Hijab (Blocking) ---
             let mahjubHeirs = [];
-
-            const heirList = {
-                // Descendants
-                sonSons: { name: "Cucu Laki-laki dari Anak Laki-laki", condition: numSonSons > 0, blocking: hasSon },
-                sonDaughters: { name: "Cucu Perempuan dari Anak Laki-laki", condition: numSonDaughters > 0, blocking: hasSon },
-                
-                // Ascendants
-                paternalGrandfather: { name: "Kakek dari Ayah", condition: hasPaternalGrandfather, blocking: hasFatherState },
-                maternalGrandmother: { name: "Nenek dari Ibu", condition: hasMaternalGrandmother, blocking: hasMotherState },
-                paternalGrandmother: { name: "Nenek dari Ayah", condition: hasPaternalGrandmother, blocking: hasMotherState || hasFatherState }, // Added blocking for Paternal Grandmother
-                
-                // Siblings
-                fullBrothers: { name: "Saudara Laki-laki Kandung", condition: numFullBrothers > 0, blocking: hasSon || hasSonSons || hasFatherState || hasPaternalGrandfather },
-                fullSisters: { name: "Saudari Perempuan Kandung", condition: numFullSisters > 0, blocking: hasSon || hasSonSons || hasFatherState || hasPaternalGrandfather },
-                paternalBrothers: { name: "Saudara Laki-laki Seayah", condition: numPaternalBrothers > 0, blocking: hasSon || hasSonSons || hasFatherState || hasPaternalGrandfather || numFullBrothers > 0 || numFullSisters > 0 },
-                paternalSisters: { name: "Saudari Perempuan Seayah", condition: numPaternalSisters > 0, blocking: hasSon || hasSonSons || hasFatherState || hasPaternalGrandfather || numFullBrothers > 0 || (numFullSisters > 0 && !isMusytarakahCase && !hasDescendants && !hasFatherState && !hasPaternalGrandfather) }, // A bit more complex, simplified for display
-                uterineSiblings: { name: "Saudara/i Seibu", condition: numUterineSiblings > 0, blocking: hasDescendants || hasFatherState || hasPaternalGrandfather },
-
-                // More distant relatives
-                nephewsFromFullBrother: { name: "Keponakan Laki-laki dari Saudara Laki-laki Kandung", condition: numNephewsFromFullBrother > 0, blocking: hasSon || hasSonSons || hasFatherState || hasPaternalGrandfather || numFullBrothers > 0 || numPaternalBrothers > 0 || numFullSisters > 0 || numPaternalSisters > 0 },
-                nephewsFromPaternalBrother: { name: "Keponakan Laki-laki dari Saudara Laki-laki Seayah", condition: numNephewsFromPaternalBrother > 0, blocking: hasSon || hasSonSons || hasFatherState || hasPaternalGrandfather || numFullBrothers > 0 || numPaternalBrothers > 0 || numFullSisters > 0 || numPaternalSisters > 0 || numNephewsFromFullBrother > 0 },
-                fullPaternalUncles: { name: "Paman Kandung", condition: numFullPaternalUncles > 0, blocking: hasSon || hasSonSons || hasFatherState || hasPaternalGrandfather || numFullBrothers > 0 || numPaternalBrothers > 0 || numNephewsFromFullBrother > 0 || numNephewsFromPaternalBrother > 0 },
-                paternalUnclesFromFather: { name: "Paman Seayah", condition: numPaternalUnclesFromFather > 0, blocking: hasSon || hasSonSons || hasFatherState || hasPaternalGrandfather || numFullBrothers > 0 || numPaternalBrothers > 0 || numNephewsFromFullBrother > 0 || numNephewsFromPaternalBrother > 0 || numFullPaternalUncles > 0 },
-                sonsOfFullPaternalUncles: { name: "Anak Laki-laki dari Paman Kandung", condition: numSonsOfFullPaternalUncles > 0, blocking: hasSon || hasSonSons || hasFatherState || hasPaternalGrandfather || numFullBrothers > 0 || numPaternalBrothers > 0 || numNephewsFromFullBrother > 0 || numNephewsFromPaternalBrother > 0 || numFullPaternalUncles > 0 || numPaternalUnclesFromFather > 0 },
-                sonsOfPaternalUnclesFromFather: { name: "Anak Laki-laki dari Paman Seayah", condition: numSonsOfPaternalUnclesFromFather > 0, blocking: hasSon || hasSonSons || hasFatherState || hasPaternalGrandfather || numFullBrothers > 0 || numPaternalBrothers > 0 || numNephewsFromFullBrother > 0 || numNephewsFromPaternalBrother > 0 || numFullPaternalUncles > 0 || numPaternalUnclesFromFather > 0 || numSonsOfFullPaternalUncles > 0 },
+            const hList = {
+                sonSons: { k: 'sonSons', n: langData.lbl_ss, c: numSonSons > 0, b: hasSon },
+                sonDaughters: { k: 'sonDaughters', n: langData.lbl_sd, c: numSonDaughters > 0, b: hasSon },
+                paternalGrandfather: { k: 'paternalGrandfather', n: langData.lbl_pgf, c: hasPaternalGrandfather, b: hasFatherState },
+                maternalGrandmother: { k: 'maternalGrandmother', n: langData.lbl_mgm, c: hasMaternalGrandmother, b: hasMotherState },
+                paternalGrandmother: { k: 'paternalGrandmother', n: langData.lbl_pgm, c: hasPaternalGrandmother, b: hasMotherState || hasFatherState },
+                fullBrothers: { k: 'fullBrothers', n: langData.lbl_fb, c: numFullBrothers > 0, b: hasSon || numSonSons>0 || hasFatherState || hasPaternalGrandfather },
+                fullSisters: { k: 'fullSisters', n: langData.lbl_fs, c: numFullSisters > 0, b: hasSon || numSonSons>0 || hasFatherState || hasPaternalGrandfather },
+                paternalBrothers: { k: 'paternalBrothers', n: langData.lbl_pb, c: numPaternalBrothers > 0, b: hasSon || numSonSons>0 || hasFatherState || hasPaternalGrandfather || numFullBrothers > 0 || numFullSisters > 0 },
+                paternalSisters: { k: 'paternalSisters', n: langData.lbl_ps, c: numPaternalSisters > 0, b: hasSon || numSonSons>0 || hasFatherState || hasPaternalGrandfather || numFullBrothers > 0 || (numFullSisters > 0 && !isMusytarakahCase && !hasDescendants && !hasFatherState && !hasPaternalGrandfather) },
+                uterineSiblings: { k: 'uterineSiblings', n: langData.lbl_us, c: numUterineSiblings > 0, b: hasDescendants || hasFatherState || hasPaternalGrandfather },
+                nf: { k: 'nephewsFromFullBrother', n: langData.lbl_nf, c: numNephewsFromFullBrother > 0, b: true },
             };
-            
-            for (const key in heirList) {
-                if (heirList[key].condition && heirList[key].blocking) {
-                    mahjubHeirs.push(heirList[key].name);
-                }
+             
+            for(const key in hList) {
+                if(hList[key].c && hList[key].b) mahjubHeirs.push({key: hList[key].k, name: hList[key].n});
             }
 
-
-            // --- Start of Faraid Calculation (Ashabul Furudh) ---
-            // --- 1. SPOUSE ---
             if (hasHusband) {
-                heirs.husband = { share: hasDescendants ? 1/4 : 1/2, note: `Suami mendapat ${hasDescendants ? "1/4 (ada keturunan)" : "1/2 (tidak ada keturunan)"}` };
+                heirs.husband = { share: hasDescendants ? 1/4 : 1/2, note: hasDescendants ? "1/4" : "1/2" };
                 totalFixedShares += heirs.husband.share;
             } else if (numWives > 0) {
-                heirs.wives = { share: hasDescendants ? 1/8 : 1/4, note: `${numWives} Istri berbagi ${hasDescendants ? "1/8 (ada keturunan)" : "1/4 (tidak ada keturunan)"}` };
+                heirs.wives = { share: hasDescendants ? 1/8 : 1/4, note: hasDescendants ? "1/8" : "1/4" };
                 totalFixedShares += heirs.wives.share;
             }
-            
-            // --- 2. MOTHER ---
             if (hasMotherState) {
                 if (isGharawainCase) {
                     let spouseShareForGharawain = heirs.husband?.share || heirs.wives?.share || 0;
-                    heirs.mother = { share: (1.0 - spouseShareForGharawain) / 3, note: "Ibu mendapat 1/3 sisa (kasus Gharawain)"};
+                    heirs.mother = { share: (1.0 - spouseShareForGharawain) / 3, note: "Gharawain"};
                 } else if (hasDescendants || numSiblingsTotal >= 2) {
-                    heirs.mother = { share: 1/6, note: "Ibu mendapat 1/6 (ada keturunan/ >=2 saudara)" };
+                    heirs.mother = { share: 1/6, note: "1/6" };
                 } else {
-                    heirs.mother = { share: 1/3, note: "Ibu mendapat 1/3" };
+                    heirs.mother = { share: 1/3, note: "1/3" };
                 }
                 totalFixedShares += heirs.mother.share;
             }
-            
-            // --- 3. UTERINE SIBLINGS (Saudara Seibu) & KASUS MUSYTARAKAH ---
-            let musytarakahApplied = false;
+
             let uterineSiblingsBlocked = hasDescendants || hasFatherState || hasPaternalGrandfather;
             if (isMusytarakahCase) {
-                resultsDiv.innerHTML += `<div class="my-4 p-3 bg-indigo-100 border-l-4 border-indigo-500 text-indigo-700 rounded-md shadow-sm"><p class="font-semibold">Terdeteksi Kasus Musytarakah (al-Himariyyah)</p><p>Saudara/i kandung diikutsertakan dalam bagian 1/3 milik saudara/i seibu.</p></div>`;
                 const musytarakahShare = 1/3;
-                
-                heirs.musytarakahGroup = {
-                    share: musytarakahShare,
-                    note: `Saudara/i Seibu dan Kandung berbagi 1/3 secara merata.`
-                };
-                 totalFixedShares += musytarakahShare;
-                 musytarakahApplied = true;
-
+                heirs.musytarakahGroup = { share: musytarakahShare, note: "Musytarakah" };
+                totalFixedShares += musytarakahShare;
             } else if (!uterineSiblingsBlocked && numUterineSiblings > 0) {
-                if (numUterineSiblings === 1) {
-                    heirs.uterineSiblings = { share: 1/6, note: "1 Saudara/i Seibu mendapat 1/6" };
-                } else { 
-                    heirs.uterineSiblings = { share: 1/3, note: `${numUterineSiblings} Saudara/i Seibu berbagi 1/3` };
-                }
+                heirs.uterineSiblings = { share: numUterineSiblings === 1 ? 1/6 : 1/3, note: numUterineSiblings===1 ? "1/6" : "1/3" };
                 totalFixedShares += heirs.uterineSiblings.share;
             }
 
-
-            // --- 4. FATHER (as Ashabul Furudh) ---
             if (hasFatherState && !isGharawainCase) { 
                 if (hasMaleDescendants) { 
-                    heirs.father = { share: 1/6, note: "Ayah mendapat 1/6 (ada keturunan laki-laki)" };
+                    heirs.father = { share: 1/6, note: "1/6" };
                     totalFixedShares += heirs.father.share;
                 } else if (hasDescendants) { 
-                     heirs.father = { share: 1/6, note: "Ayah mendapat 1/6 (ada keturunan perempuan) + sisa jika ada" };
+                     heirs.father = { share: 1/6, note: "1/6 + Sisa" };
                      totalFixedShares += heirs.father.share; 
                 }
             }
-            
-            // --- 5. PATERNAL GRANDFATHER (as Ashabul Furudh) ---
+
             if (hasPaternalGrandfather && !hasFatherState) { 
                 if (hasMaleDescendants) {
-                    heirs.paternalGrandfather = { share: 1/6, note: "Kakek dari Ayah mendapat 1/6 (ada keturunan laki-laki)" };
+                    heirs.paternalGrandfather = { share: 1/6, note: "1/6" };
                     totalFixedShares += heirs.paternalGrandfather.share;
                 } else if (hasDescendants) { 
-                    heirs.paternalGrandfather = { share: 1/6, note: "Kakek dari Ayah mendapat 1/6 (ada keturunan perempuan) + sisa jika ada" };
+                    heirs.paternalGrandfather = { share: 1/6, note: "1/6 + Sisa" };
                     totalFixedShares += heirs.paternalGrandfather.share;
                 }
             }
 
-            // --- 6. MATERNAL GRANDMOTHER & PATERNAL GRANDMOTHER ---
             let maternalGrandmotherOriginalShare = 0;
             if (hasMaternalGrandmother && !hasMotherState) { 
                  maternalGrandmotherOriginalShare = 1/6;
-                 heirs.maternalGrandmother = { share: 1/6, note: "Nenek dari Ibu mendapat 1/6" };
+                 heirs.maternalGrandmother = { share: 1/6, note: "1/6" };
                  totalFixedShares += heirs.maternalGrandmother.share;
             }
             if (hasPaternalGrandmother && !hasMotherState) {
                 if (heirs.maternalGrandmother && maternalGrandmotherOriginalShare === 1/6) { 
                     totalFixedShares -= maternalGrandmotherOriginalShare; 
                     heirs.maternalGrandmother.share = 1/12; 
-                    heirs.maternalGrandmother.note = "Nenek dari Ibu mendapat 1/12 (berbagi dengan Nenek dari Ayah)";
                     totalFixedShares += 1/12; 
-                    heirs.paternalGrandmother = { share: 1/12, note: "Nenek dari Ayah mendapat 1/12 (berbagi dengan Nenek dari Ibu)" };
+                    heirs.paternalGrandmother = { share: 1/12, note: "1/12" };
                     totalFixedShares += 1/12; 
                 } else {
-                    heirs.paternalGrandmother = { share: 1/6, note: "Nenek dari Ayah mendapat 1/6" };
+                    heirs.paternalGrandmother = { share: 1/6, note: "1/6" };
                     totalFixedShares += heirs.paternalGrandmother.share;
                 }
             }
 
-            // --- 7. DAUGHTERS (as Ashabul Furudh) ---
             if (numDaughters > 0 && !hasSon) { 
-                if (numDaughters === 1) {
-                    heirs.daughters = { share: 1/2, note: "1 Anak Perempuan mendapat 1/2" };
-                } else { 
-                    heirs.daughters = { share: 2/3, note: `${numDaughters} Anak Perempuan berbagi 2/3` };
-                }
+                heirs.daughters = { share: numDaughters === 1 ? 1/2 : 2/3, note: numDaughters === 1 ? "1/2" : "2/3" };
                 totalFixedShares += heirs.daughters.share;
             }
 
-            // --- 8. SON'S DAUGHTERS (as Ashabul Furudh) ---
             if (numSonDaughters > 0 && !hasSon && !numSonSons) { 
                 if (!hasChildren) { 
-                    if (numSonDaughters === 1) {
-                        heirs.sonDaughters = { share: 1/2, note: "1 Cucu Perempuan dari Anak Laki-laki mendapat 1/2" };
-                    } else {
-                        heirs.sonDaughters = { share: 2/3, note: `${numSonDaughters} Cucu Perempuan dari Anak Laki-laki berbagi 2/3` };
-                    }
+                    heirs.sonDaughters = { share: numSonDaughters === 1 ? 1/2 : 2/3, note: numSonDaughters===1 ? "1/2" : "2/3" };
                     totalFixedShares += heirs.sonDaughters.share;
                 } else if (numDaughters === 1 && heirs.daughters?.share === 1/2) { 
-                    heirs.sonDaughters = { share: 1/6, note: `${numSonDaughters} Cucu Perempuan dari Anak Laki-laki berbagi 1/6 (melengkapi 2/3 dengan Anak Perempuan)` };
+                    heirs.sonDaughters = { share: 1/6, note: "1/6 (Takmilah)" };
                     totalFixedShares += heirs.sonDaughters.share;
                 }
             }
 
-            // --- 9. FULL & PATERNAL SISTERS (as Ashabul Furudh) ---
             let fullSistersEligibleForFixedShare = numFullSisters > 0 && !hasDescendants && !hasFatherState && !hasPaternalGrandfather && !numFullBrothers && !musytarakahApplied;
             if (fullSistersEligibleForFixedShare) {
-                if (numFullSisters === 1) {
-                    heirs.fullSisters = { share: 1/2, note: "1 Saudari Pr Kandung mendapat 1/2" };
-                } else { 
-                    heirs.fullSisters = { share: 2/3, note: `${numFullSisters} Saudari Pr Kandung berbagi 2/3` };
-                }
+                heirs.fullSisters = { share: numFullSisters === 1 ? 1/2 : 2/3, note: numFullSisters===1 ? "1/2" : "2/3" };
                 totalFixedShares += heirs.fullSisters.share;
             }
 
-            let paternalSistersEligibleForFixedShare = numPaternalSisters > 0 && !hasDescendants && !hasFatherState && !hasPaternalGrandfather && !numFullBrothers && !numPaternalBrothers && !musytarakahApplied;
-            if (paternalSistersEligibleForFixedShare) {
-                if (!heirs.fullSisters || (heirs.fullSisters && heirs.fullSisters.share < (2/3 - EPSILON))) { 
-                    if (!heirs.fullSisters) { 
-                        if (numPaternalSisters === 1) {
-                            heirs.paternalSisters = { share: 1/2, note: "1 Saudari Pr Seayah mendapat 1/2" };
-                        } else {
-                            heirs.paternalSisters = { share: 2/3, note: `${numPaternalSisters} Saudari Pr Seayah berbagi 2/3` };
-                        }
-                        totalFixedShares += heirs.paternalSisters.share;
-                    } else if (heirs.fullSisters && numFullSisters === 1 && heirs.fullSisters.share === 1/2) { 
-                        heirs.paternalSisters = { share: 1/6, note: `${numPaternalSisters} Saudari Pr Seayah berbagi 1/6 (melengkapi 2/3 dengan Saudari Pr Kandung)` };
-                        totalFixedShares += heirs.paternalSisters.share;
-                    }
-                }
-            }
-
-
-            initialTotalFixedShares = totalFixedShares; 
-            
-            // --- ASHABAH (Residuary Heirs) ---
             faraidRemainingPortion = 1.0 - totalFixedShares;
             let asabahTookAllRemainder = false;
 
-            if (faraidRemainingPortion > EPSILON || Math.abs(faraidRemainingPortion) < EPSILON || totalFixedShares < (1.0 - EPSILON) ) { 
-                if (musytarakahApplied) {
-                    asabahTookAllRemainder = true; 
-                } else if (isGharawainCase && hasFatherState) {
-                    let spouseShare = heirs.husband?.share || heirs.wives?.share || 0;
-                    let motherShare = heirs.mother?.share || 0;
-                    let fatherShareGharawain = 1.0 - spouseShare - motherShare;
-                    if (fatherShareGharawain > EPSILON) {
-                        heirs.father = { share: fatherShareGharawain, note: "Ayah mendapat sisa (kasus Gharawain, Ashobah bin Nafsi)" };
-                        asabahTookAllRemainder = true;
-                    } else { 
-                        heirs.father = { share: 0, note: "Ayah (kasus Gharawain, tidak ada sisa)"};
-                    }
+            if (faraidRemainingPortion > EPSILON || totalFixedShares < (1.0 - EPSILON) ) { 
+                 if (isGharawainCase && hasFatherState) {
+                    let residue = 1.0 - (heirs.husband?.share||heirs.wives?.share||0) - heirs.mother.share;
+                    heirs.father = { share: residue, note: "Ashobah (Gharawain)" };
+                    asabahTookAllRemainder = true;
                 } else if (numSons > 0) { 
-                    if (heirs.daughters) { 
-                        totalFixedShares -= heirs.daughters.share; 
-                        delete heirs.daughters; 
-                    }
+                    if (heirs.daughters) { totalFixedShares -= heirs.daughters.share; delete heirs.daughters; }
                     faraidRemainingPortion = 1.0 - totalFixedShares; 
-                    let sonShareRatio = 2;
-                    let daughterShareRatio = 1;
-                    let totalParts = (numSons * sonShareRatio) + (numDaughters * daughterShareRatio);
-
-                    if (totalParts > 0 && faraidRemainingPortion > EPSILON) {
-                        let sonNote;
-                        if (numDaughters > 0) {
-                            sonNote = `${numSons} Anak Laki-laki. Bersama Anak Perempuan (yang menjadi Ashobah bil Ghair), mereka berbagi sisa warisan (bagian Anak Lk 2 : Anak Pr 1).`;
-                        } else {
-                            sonNote = `${numSons} Anak Laki-laki (Ashobah bin Nafsi).`;
-                            if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='sons').length === 0) { 
-                                sonNote += " Mendapat seluruh harta warisan.";
-                            } else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON) ) {
-                                 sonNote += " Mendapat seluruh sisa harta.";
-                            }
-                        }
-                        heirs.sons = { share: (numSons * sonShareRatio / totalParts) * faraidRemainingPortion, note: sonNote };
-                        
-                        if (numDaughters > 0) {
-                             heirs.daughters = { share: (numDaughters * daughterShareRatio / totalParts) * faraidRemainingPortion, note: `${numDaughters} Anak Perempuan (Ashobah bil Ghair karena bersama Anak Laki-laki. Mereka berbagi sisa warisan, bagian Anak Pr 1 : Anak Lk 2).` };
-                        }
-                        asabahTookAllRemainder = true;
-                    }
+                    let totalParts = (numSons * 2) + numDaughters;
+                    heirs.sons = { share: (numSons * 2 / totalParts) * faraidRemainingPortion, note: "Ashobah bin Nafsi" };
+                    if (numDaughters > 0) heirs.daughters = { share: (numDaughters * 1 / totalParts) * faraidRemainingPortion, note: "Ashobah bil Ghair" };
+                    asabahTookAllRemainder = true;
                 } 
-                else if (numSonSons > 0 && !hasSon) { 
-                    if (heirs.sonDaughters && heirs.sonDaughters.share > 0 && numSonDaughters > 0) { 
-                         totalFixedShares -= heirs.sonDaughters.share;
-                         delete heirs.sonDaughters;
-                    }
-                    faraidRemainingPortion = 1.0 - totalFixedShares;
-                    let sonSonShareRatio = 2;
-                    let sonDaughterShareRatio = 1;
-                    let totalGrandParts = (numSonSons * sonSonShareRatio) + (numSonDaughters * sonDaughterShareRatio);
-                    if (totalGrandParts > 0 && faraidRemainingPortion > EPSILON) {
-                        let sonSonNote;
-                        if (numSonDaughters > 0) {
-                            sonSonNote = `${numSonSons} Cucu Lk dari Anak Lk. Bersama Cucu Pr dari Anak Lk (yang menjadi Ashobah bil Ghair), mereka berbagi sisa warisan (bagian Cucu Lk 2 : Cucu Pr 1).`;
-                        } else {
-                            sonSonNote = `${numSonSons} Cucu Lk dari Anak Lk (Ashobah bin Nafsi).`;
-                             if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='sonSons').length === 0) {
-                                sonSonNote += " Mendapat seluruh harta warisan.";
-                            } else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) {
-                                 sonSonNote += " Mendapat seluruh sisa harta.";
-                            }
-                        }
-                        heirs.sonSons = { share: (numSonSons * sonSonShareRatio / totalGrandParts) * faraidRemainingPortion, note: sonSonNote };
-                        if (numSonDaughters > 0) {
-                            heirs.sonDaughters = { share: (numSonDaughters * sonDaughterShareRatio / totalGrandParts) * faraidRemainingPortion, note: `${numSonDaughters} Cucu Pr dari Anak Lk (Ashobah bil Ghair karena bersama Cucu Lk dari Anak Lk. Mereka berbagi sisa warisan, bagian Cucu Pr 1 : Cucu Lk 2).` };
-                        }
-                        asabahTookAllRemainder = true;
-                    }
-                }
-                else if (hasFatherState && !isGharawainCase && !hasMaleDescendants && faraidRemainingPortion > EPSILON) { 
-                    let fatherNote = "Ayah (Ashobah bin Nafsi)";
-                    if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='father').length === 0) fatherNote += ", mendapat seluruh harta warisan";
-                    else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) fatherNote += ", mendapat seluruh sisa harta";
-
-                    if (!heirs.father) { 
-                        heirs.father = { share: faraidRemainingPortion, note: fatherNote}; 
-                    } else { 
-                        heirs.father.share += faraidRemainingPortion; 
-                        heirs.father.note = heirs.father.note.replace(" + sisa jika ada", "") + ` + Sisa (${fatherNote.replace("Ayah ", "")})`;
-                    }
-                    asabahTookAllRemainder = true;
-                }
-                else if (hasPaternalGrandfather && !hasFatherState && !hasMaleDescendants && faraidRemainingPortion > EPSILON) { 
-                     let pgNote = "Kakek dari Ayah (Ashobah bin Nafsi)";
-                     if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='paternalGrandfather').length === 0) pgNote += ", mendapat seluruh harta warisan";
-                     else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) pgNote += " Mendapat seluruh sisa harta";
-
-                     if (!heirs.paternalGrandfather) {
-                        heirs.paternalGrandfather = { share: faraidRemainingPortion, note: pgNote};
-                     } else {
-                        heirs.paternalGrandfather.share += faraidRemainingPortion;
-                        heirs.paternalGrandfather.note = heirs.paternalGrandfather.note.replace(" + sisa jika ada", "") + ` + Sisa (${pgNote.replace("Kakek dari Ayah ","")})`;
-                     }
-                     asabahTookAllRemainder = true;
-                }
-                let fullBrothersBlocked = hasSon || numSonSons > 0 || hasFatherState || hasPaternalGrandfather;
-                if (!fullBrothersBlocked && numFullBrothers > 0 && faraidRemainingPortion > EPSILON && !asabahTookAllRemainder) {
-                    if (heirs.fullSisters && heirs.fullSisters.share > 0) { 
-                        totalFixedShares -= heirs.fullSisters.share; 
-                        delete heirs.fullSisters;
-                    }
-                    faraidRemainingPortion = 1.0 - totalFixedShares; 
-                    let brotherRatio = 2;
-                    let sisterRatio = 1;
-                    let totalSiblingParts = (numFullBrothers * brotherRatio) + (numFullSisters * sisterRatio);
-                    if (totalSiblingParts > 0 && faraidRemainingPortion > EPSILON) {
-                        let fbNote;
-                        if (numFullSisters > 0) {
-                            fbNote = `${numFullBrothers} Saudara Lk Kandung. Bersama Saudari Pr Kandung (yang menjadi Ashobah bil Ghair), mereka berbagi sisa warisan (bagian Sdr Lk 2 : Sdri Pr 1).`;
-                        } else {
-                            fbNote = `${numFullBrothers} Saudara Lk Kandung (Ashobah bin Nafsi).`;
-                            if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='fullBrothers').length === 0) {
-                               fbNote += " Mendapat seluruh harta warisan.";
-                            } else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) {
-                                fbNote += " Mendapat seluruh sisa harta.";
-                            }
-                        }
-                        heirs.fullBrothers = { share: (numFullBrothers * brotherRatio / totalSiblingParts) * faraidRemainingPortion, note: fbNote};
-                        if (numFullSisters > 0) {
-                            heirs.fullSisters = { share: (numFullSisters * sisterRatio / totalSiblingParts) * faraidRemainingPortion, note: `${numFullSisters} Saudari Pr Kandung (Ashobah bil Ghair karena bersama Sdr Lk Kandung. Mereka berbagi sisa warisan, bagian Sdri Pr 1 : Sdr Lk 2).`};
-                        }
-                        asabahTookAllRemainder = true;
-                    }
-                } 
-                else if (!fullBrothersBlocked && numFullSisters > 0 && !numFullBrothers && (heirs.daughters || heirs.sonDaughters) && faraidRemainingPortion > EPSILON && !asabahTookAllRemainder) { 
-                    heirs.fullSisters = { share: faraidRemainingPortion, note: `${numFullSisters} Saudari Pr Kandung (Ashobah ma'al Ghair dengan anak/cucu perempuan, mengambil sisa)`};
-                    asabahTookAllRemainder = true;
-                }
-                let paternalBrothersBlocked = fullBrothersBlocked || numFullBrothers > 0 || (numFullSisters > 0 && asabahTookAllRemainder) ; 
-                if (!paternalBrothersBlocked && numPaternalBrothers > 0 && faraidRemainingPortion > EPSILON && !asabahTookAllRemainder) {
-                     if (heirs.paternalSisters && heirs.paternalSisters.share > 0) {
-                        totalFixedShares -= heirs.paternalSisters.share;
-                        delete heirs.paternalSisters;
-                    }
-                    faraidRemainingPortion = 1.0 - totalFixedShares;
-                    let brotherRatio = 2;
-                    let sisterRatio = 1;
-                    let totalPatSiblingParts = (numPaternalBrothers * brotherRatio) + (numPaternalSisters * sisterRatio);
-                     if (totalPatSiblingParts > 0 && faraidRemainingPortion > EPSILON) {
-                        let pbNote;
-                        if (numPaternalSisters > 0) {
-                             pbNote = `${numPaternalBrothers} Saudara Lk Seayah. Bersama Saudari Pr Seayah (yang menjadi Ashobah bil Ghair), mereka berbagi sisa warisan (bagian Sdr Lk 2 : Sdri Pr 1).`;
-                        } else {
-                            pbNote = `${numPaternalBrothers} Saudara Lk Seayah (Ashobah bin Nafsi).`;
-                            if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='paternalBrothers').length === 0) pbNote += " Mendapat seluruh harta warisan.";
-                            else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) pbNote += " Mendapat seluruh sisa harta.";
-                        }
-                        heirs.paternalBrothers = {share: (numPaternalBrothers * brotherRatio / totalPatSiblingParts) * faraidRemainingPortion, note: pbNote};
-                        if (numPaternalSisters > 0) {
-                            heirs.paternalSisters = {share: (numPaternalSisters * sisterRatio / totalPatSiblingParts) * faraidRemainingPortion, note: `${numPaternalSisters} Saudari Pr Seayah (Ashobah bil Ghair dengan Sdr Lk Seayah. Mereka berbagi sisa warisan, bagian Sdri Pr 1 : Sdr Lk 2).`};
-                        }
-                        asabahTookAllRemainder = true;
-                    }
-                }
-                else if (!paternalBrothersBlocked && numPaternalSisters > 0 && !numPaternalBrothers && (heirs.daughters || heirs.sonDaughters) && faraidRemainingPortion > EPSILON && !asabahTookAllRemainder) {
-                     heirs.paternalSisters = {share: faraidRemainingPortion, note: `${numPaternalSisters} Saudari Pr Seayah (Ashobah ma'al Ghair dengan anak/cucu perempuan, mengambil sisa)`};
-                    asabahTookAllRemainder = true;
-                }
-
-                // Keponakan Lk dari Saudara Lk Kandung
-                let nephewsFromFullBrotherBlocked = paternalBrothersBlocked || numPaternalBrothers > 0 || (numPaternalSisters > 0 && asabahTookAllRemainder);
-                if (!nephewsFromFullBrotherBlocked && numNephewsFromFullBrother > 0 && faraidRemainingPortion > EPSILON && !asabahTookAllRemainder) {
-                    let nephewNote = `${numNephewsFromFullBrother} Keponakan Lk dari Sdr Lk Kandung (Ashobah bin Nafsi)`;
-                    if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='nephewsFromFullBrother').length === 0) nephewNote += ", mendapat seluruh harta warisan.";
-                    else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) nephewNote += ", mendapat seluruh sisa harta.";
-                    heirs.nephewsFromFullBrother = { share: faraidRemainingPortion, note: nephewNote }; 
-                    asabahTookAllRemainder = true;
-                }
-
-                // Keponakan Lk dari Saudara Lk Seayah
-                let nephewsFromPaternalBrotherBlocked = nephewsFromFullBrotherBlocked || numNephewsFromFullBrother > 0;
-                if (!nephewsFromPaternalBrotherBlocked && numNephewsFromPaternalBrother > 0 && faraidRemainingPortion > EPSILON && !asabahTookAllRemainder) {
-                    let nephewNote = `${numNephewsFromPaternalBrother} Keponakan Lk dari Sdr Lk Seayah (Ashobah bin Nafsi)`;
-                    if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='nephewsFromPaternalBrother').length === 0) nephewNote += ", mendapat seluruh harta warisan.";
-                    else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) nephewNote += ", mendapat seluruh sisa harta.";
-                    heirs.nephewsFromPaternalBrother = { share: faraidRemainingPortion, note: nephewNote };
-                    asabahTookAllRemainder = true;
-                }
-
-                // Paman Kandung
-                let fullPaternalUnclesBlocked = nephewsFromPaternalBrotherBlocked || numNephewsFromPaternalBrother > 0;
-                if (!fullPaternalUnclesBlocked && numFullPaternalUncles > 0 && faraidRemainingPortion > EPSILON && !asabahTookAllRemainder) {
-                    let uncleNote = `${numFullPaternalUncles} Paman Kandung (Ashobah bin Nafsi)`;
-                     if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='fullPaternalUncles').length === 0) uncleNote += ", mendapat seluruh harta warisan.";
-                    else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) uncleNote += ", mendapat seluruh sisa harta.";
-                    heirs.fullPaternalUncles = { share: faraidRemainingPortion, note: uncleNote };
-                    asabahTookAllRemainder = true;
-                }
-
-                // Paman Seayah
-                let paternalUnclesFromFatherBlocked = fullPaternalUnclesBlocked || numFullPaternalUncles > 0;
-                if (!paternalUnclesFromFatherBlocked && numPaternalUnclesFromFather > 0 && faraidRemainingPortion > EPSILON && !asabahTookAllRemainder) {
-                     let uncleNote = `${numPaternalUnclesFromFather} Paman Seayah (Ashobah bin Nafsi)`;
-                     if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='paternalUnclesFromFather').length === 0) uncleNote += ", mendapat seluruh harta warisan.";
-                    else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) uncleNote += ", mendapat seluruh sisa harta.";
-                    heirs.paternalUnclesFromFather = { share: faraidRemainingPortion, note: uncleNote };
-                    asabahTookAllRemainder = true;
-                }
-
-                // Anak Lk dari Paman Kandung
-                let sonsOfFullPaternalUnclesBlocked = paternalUnclesFromFatherBlocked || numPaternalUnclesFromFather > 0;
-                if (!sonsOfFullPaternalUnclesBlocked && numSonsOfFullPaternalUncles > 0 && faraidRemainingPortion > EPSILON && !asabahTookAllRemainder) {
-                    let cousinNote = `${numSonsOfFullPaternalUncles} Anak Lk dari Paman Kandung (Ashobah bin Nafsi)`;
-                    if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='sonsOfFullPaternalUncles').length === 0) cousinNote += ", mendapat seluruh harta warisan.";
-                    else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) cousinNote += ", mendapat seluruh sisa harta.";
-                    heirs.sonsOfFullPaternalUncles = { share: faraidRemainingPortion, note: cousinNote };
-                    asabahTookAllRemainder = true;
-                }
-
-                // Anak Lk dari Paman Seayah
-                let sonsOfPaternalUnclesFromFatherBlocked = sonsOfFullPaternalUnclesBlocked || numSonsOfFullPaternalUncles > 0;
-                if (!sonsOfPaternalUnclesFromFatherBlocked && numSonsOfPaternalUnclesFromFather > 0 && faraidRemainingPortion > EPSILON && !asabahTookAllRemainder) {
-                    let cousinNote = `${numSonsOfPaternalUnclesFromFather} Anak Lk dari Paman Seayah (Ashobah bin Nafsi)`;
-                    if (initialTotalFixedShares < EPSILON && Object.keys(heirs).filter(k=>k!=='sonsOfPaternalUnclesFromFather').length === 0) cousinNote += ", mendapat seluruh harta warisan.";
-                    else if (initialTotalFixedShares < EPSILON || faraidRemainingPortion > (1.0 - EPSILON)) cousinNote += ", mendapat seluruh sisa harta.";
-                    heirs.sonsOfPaternalUnclesFromFather = { share: faraidRemainingPortion, note: cousinNote };
-                    asabahTookAllRemainder = true;
-                }
             }
             
-            // --- Final Split for Musytarakah Case ---
-            if (musytarakahApplied && heirs.musytarakahGroup) {
-                const totalParticipatingSiblings = numUterineSiblings + numFullBrothers + numFullSisters;
-                if (totalParticipatingSiblings > 0) {
-                    const sharePerMusytarakahHeir = heirs.musytarakahGroup.share / totalParticipatingSiblings;
-                    if (numUterineSiblings > 0) {
-                        heirs.uterineSiblings = {
-                            share: sharePerMusytarakahHeir * numUterineSiblings,
-                            note: `Berbagi 1/3 dalam Kasus Musytarakah`
-                        }
-                    }
-                     if (numFullBrothers > 0) {
-                        heirs.fullBrothers = {
-                            share: sharePerMusytarakahHeir * numFullBrothers,
-                            note: `Berbagi 1/3 dalam Kasus Musytarakah`
-                        }
-                    }
-                    if (numFullSisters > 0) {
-                        heirs.fullSisters = {
-                             share: sharePerMusytarakahHeir * numFullSisters,
-                             note: `Berbagi 1/3 dalam Kasus Musytarakah`
-                        }
-                    }
-                    delete heirs.musytarakahGroup; // Remove the temporary object
+            if (isMusytarakahCase && heirs.musytarakahGroup) {
+                const totalParticipating = numUterineSiblings + numFullBrothers + numFullSisters;
+                if (totalParticipating > 0) {
+                    const s = heirs.musytarakahGroup.share / totalParticipating;
+                    if (numUterineSiblings > 0) heirs.uterineSiblings = { share: s * numUterineSiblings, note: "Musytarakah" };
+                    if (numFullBrothers > 0) heirs.fullBrothers = { share: s * numFullBrothers, note: "Musytarakah" };
+                    if (numFullSisters > 0) heirs.fullSisters = { share: s * numFullSisters, note: "Musytarakah" };
+                    delete heirs.musytarakahGroup;
                 }
             }
 
-
-            // --- AUL (Increase) and RADD (Return) ---
             let currentTotalAssignedShares = 0;
-            for (const heirKey in heirs) {
-                if (heirs[heirKey] && typeof heirs[heirKey].share === 'number') {
-                    currentTotalAssignedShares += heirs[heirKey].share;
-                }
-            }
+            for (const k in heirs) if (heirs[k]) currentTotalAssignedShares += heirs[k].share;
 
             if (currentTotalAssignedShares > 1.0 + EPSILON) { 
-                resultsDiv.innerHTML += `<div class="my-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md shadow-sm"><p class="font-semibold">Terjadi Kasus 'Aul (Peningkatan)</p><p>Total bagian (${(currentTotalAssignedShares*100).toFixed(2)}%) melebihi 100%, maka semua bagian akan disesuaikan secara proporsional.</p></div>`;
+                resultsDiv.innerHTML += `<div class="my-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md shadow-sm"><p class="font-bold">${langData.aul}</p></div>`;
                 const aulFactor = currentTotalAssignedShares;
-                for (const heirKey in heirs) {
-                    if (heirs[heirKey] && typeof heirs[heirKey].share === 'number') {
-                        heirs[heirKey].share /= aulFactor;
-                    }
-                }
+                for (const k in heirs) if (heirs[k]) heirs[k].share /= aulFactor;
             } else if (currentTotalAssignedShares < (1.0 - EPSILON) && !asabahTookAllRemainder) { 
-                let raddRemainderPortion = 1.0 - currentTotalAssignedShares;
-                let raddEligibleSharesSum = 0;
-                let raddEligibleHeirs = {};
-                for (const heirKey in heirs) { 
-                    if (heirs[heirKey] && typeof heirs[heirKey].share === 'number' && heirs[heirKey].share > EPSILON) {
-                        if (heirKey === 'husband' || heirKey === 'wives') continue; 
-                        raddEligibleHeirs[heirKey] = heirs[heirKey].share; 
-                        raddEligibleSharesSum += heirs[heirKey].share;
-                    }
-                }
-                if (raddEligibleSharesSum > EPSILON && raddRemainderPortion > EPSILON) {
-                     resultsDiv.innerHTML += `<div class="my-4 p-3 bg-sky-100 border-l-4 border-sky-500 text-sky-700 rounded-md shadow-sm"><p class="font-semibold">Terjadi Kasus Radd (Pengembalian)</p><p>Sisa porsi warisan (${(raddRemainderPortion * 100).toFixed(2)}%) dikembalikan kepada ahli waris yang berhak secara proporsional.</p></div>`;
-                    for (const heirKey in raddEligibleHeirs) {
-                        if (heirs[heirKey] && raddEligibleSharesSum > EPSILON) { 
-                           heirs[heirKey].share += (raddEligibleHeirs[heirKey] / raddEligibleSharesSum) * raddRemainderPortion;
-                           if (heirs[heirKey].note) heirs[heirKey].note += " + Radd"; else heirs[heirKey].note = "Radd";
-                        }
-                    }
-                } else if ((heirs.husband || heirs.wives) && raddRemainderPortion > EPSILON && Object.keys(raddEligibleHeirs).length === 0) {
-                    resultsDiv.innerHTML += `<div class="my-4 p-3 bg-sky-100 border-l-4 border-sky-500 text-sky-700 rounded-md shadow-sm"><p class="font-semibold">Terjadi Kasus Radd (Pengembalian)</p><p>Sisa porsi warisan (${(raddRemainderPortion * 100).toFixed(2)}%) dikembalikan kepada pasangan.</p></div>`;
-                    if(heirs.husband) {
-                        heirs.husband.share += raddRemainderPortion;
-                        if (heirs.husband.note) heirs.husband.note += " + Radd"; else heirs.husband.note = "Radd";
-                    }
-                    if(heirs.wives) {
-                         heirs.wives.share += raddRemainderPortion;
-                         if (heirs.wives.note) heirs.wives.note += " + Radd"; else heirs.wives.note = "Radd";
-                    }
+                resultsDiv.innerHTML += `<div class="my-4 p-4 bg-sky-100 border-l-4 border-sky-500 text-sky-700 rounded-md shadow-sm"><p class="font-bold">${langData.radd}</p></div>`;
+                let raddRemainder = 1.0 - currentTotalAssignedShares;
+                let eligibleSum = 0;
+                for (const k in heirs) if (k !== 'husband' && k !== 'wives') eligibleSum += heirs[k].share;
+                
+                if (eligibleSum > EPSILON) {
+                    for (const k in heirs) if (k !== 'husband' && k !== 'wives') heirs[k].share += (heirs[k].share / eligibleSum) * raddRemainder;
+                } else if (heirs.husband || heirs.wives) {
+                    if(heirs.husband) heirs.husband.share += raddRemainder;
+                    if(heirs.wives) heirs.wives.share += raddRemainder;
                 }
             }
-            
-            resultsDiv.innerHTML += `<h2 class="text-xl font-bold my-8 text-teal-700 section-title">Hasil Pembagian ${estateValue >= EPSILON ? "(dari Rp " + estateValue.toLocaleString('id-ID',{minimumFractionDigits: 0, maximumFractionDigits: 2}) + ")" : "(Teoritis)"}</h2>`;
-            let totalDistributedAmount = 0;
-            let finalTotalSharePercent = 0;
+
+            latestCalculationResult = {
+                deceasedName: deceasedName,
+                totalHarta: totalHartaPeninggalan,
+                hutang: hutang,
+                biayaJenazah: biayaJenazah,
+                wasiat: wasiatSebenarnya,
+                netEstate: estateValue,
+                heirs: [],
+                mahjub: mahjubHeirs.map(m => m.key) 
+            };
+
+            resultsDiv.innerHTML += `<h2 class="text-2xl font-bold my-6 text-teal-700">${langData.res_title}</h2>`;
             let hasAnyHeir = false;
 
-            for (const heirKey in heirs) {
-                if (heirs[heirKey] && typeof heirs[heirKey].share === 'number' && heirs[heirKey].share > EPSILON) {
+            for (const k in heirs) {
+                if (heirs[k] && heirs[k].share > EPSILON) {
                     hasAnyHeir = true;
-                    const heirInfo = heirs[heirKey];
-                    heirInfo.amount = heirInfo.share * (estateValue > 0 ? estateValue : 0); 
-                    totalDistributedAmount += heirInfo.amount;
-                    finalTotalSharePercent += heirInfo.share;
+                    const info = heirs[k];
+                    info.amount = info.share * (estateValue > 0 ? estateValue : 0); 
 
-                    let heirNameDisplay = heirKey.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                    if (heirKey === 'wives' && numWives > 0) heirNameDisplay = `${numWives} Istri`;
-                    else if (heirKey === 'sons' && numSons > 0) heirNameDisplay = `${numSons} Anak Laki-laki`;
-                    else if (heirKey === 'daughters' && numDaughters > 0) heirNameDisplay = `${numDaughters} Anak Perempuan`;
-                    else if (heirKey === 'sonSons' && numSonSons > 0) heirNameDisplay = `${numSonSons} Cucu Lk dari Anak Lk`;
-                    else if (heirKey === 'sonDaughters' && numSonDaughters > 0) heirNameDisplay = `${numSonDaughters} Cucu Pr dari Anak Lk`;
-                    else if (heirKey === 'fullBrothers' && numFullBrothers > 0) heirNameDisplay = `${numFullBrothers} Saudara Lk Kandung`;
-                    else if (heirKey === 'fullSisters' && numFullSisters > 0) heirNameDisplay = `${numFullSisters} Saudari Pr Kandung`;
-                    else if (heirKey === 'paternalBrothers' && numPaternalBrothers > 0) heirNameDisplay = `${numPaternalBrothers} Saudara Lk Seayah`;
-                    else if (heirKey === 'paternalSisters' && numPaternalSisters > 0) heirNameDisplay = `${numPaternalSisters} Saudari Pr Seayah`;
-                    else if (heirKey === 'uterineSiblings' && numUterineSiblings > 0) heirNameDisplay = `${numUterineSiblings} Saudara/i Seibu`;
-                    else if (heirKey === 'nephewsFromFullBrother' && numNephewsFromFullBrother > 0) heirNameDisplay = `${numNephewsFromFullBrother} Keponakan Lk dari Sdr Lk Kandung`;
-                    else if (heirKey === 'nephewsFromPaternalBrother' && numNephewsFromPaternalBrother > 0) heirNameDisplay = `${numNephewsFromPaternalBrother} Keponakan Lk dari Sdr Lk Seayah`;
-                    else if (heirKey === 'fullPaternalUncles' && numFullPaternalUncles > 0) heirNameDisplay = `${numFullPaternalUncles} Paman Kandung`;
-                    else if (heirKey === 'paternalUnclesFromFather' && numPaternalUnclesFromFather > 0) heirNameDisplay = `${numPaternalUnclesFromFather} Paman Seayah`;
-                    else if (heirKey === 'sonsOfFullPaternalUncles' && numSonsOfFullPaternalUncles > 0) heirNameDisplay = `${numSonsOfFullPaternalUncles} Anak Lk dari Paman Kandung`;
-                    else if (heirKey === 'sonsOfPaternalUnclesFromFather' && numSonsOfPaternalUnclesFromFather > 0) heirNameDisplay = `${numSonsOfPaternalUnclesFromFather} Anak Lk dari Paman Seayah`;
+                    latestCalculationResult.heirs.push({
+                        key: k,
+                        sharePercent: (info.share * 100).toFixed(3),
+                        amount: info.amount,
+                        note: info.note
+                    });
 
-                    // NOTE: Replaced the result card classes with custom 'result-card' handled by CSS override to look Neumorphic
+                    let label = "";
+                    if(k === 'husband') label = langData.h_spouse;
+                    else if(k === 'wives') label = langData.lbl_wives;
+                    else if(k === 'sons') label = langData.lbl_sons;
+                    else if(k === 'daughters') label = langData.lbl_daughters;
+                    else if(k === 'father') label = langData.lbl_father;
+                    else if(k === 'mother') label = langData.lbl_mother;
+                    else if(k === 'sonSons') label = langData.lbl_ss;
+                    else if(k === 'sonDaughters') label = langData.lbl_sd;
+                    else if(k === 'fullBrothers') label = langData.lbl_fb;
+                    else if(k === 'fullSisters') label = langData.lbl_fs;
+                    else if(k === 'paternalBrothers') label = langData.lbl_pb;
+                    else if(k === 'paternalSisters') label = langData.lbl_ps;
+                    else if(k === 'uterineSiblings') label = langData.lbl_us;
+                    else if(k.includes('Grandfather')) label = langData.lbl_pgf;
+                    else if(k.includes('Grandmother')) label = langData.lbl_mgm;
+                    else label = k; 
+
                     resultsDiv.innerHTML += `
-                        <div class="result-card p-6 mb-6">
-                            <div class="flex flex-col md:flex-row justify-between md:items-start">
-                                <div class="mb-2 md:mb-0">
-                                    <h4 class="text-xl font-bold text-teal-700">${heirNameDisplay}</h4>
-                                    <p class="text-sm text-slate-500 mt-1">${heirInfo.note || ''}</p>
+                        <div class="neu-flat p-6 mb-4 result-card-neu">
+                            <h4 class="text-lg font-bold text-teal-700">${label}</h4>
+                            <p class="text-xs text-slate-500 italic mb-2">${info.note || ''}</p>
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <p class="text-sm font-medium text-slate-500">${langData.share}</p>
+                                    <p class="text-md font-bold text-slate-700">${(info.share * 100).toFixed(3)}%</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-sm font-bold text-teal-600 bg-teal-50 rounded-lg px-2 py-1 inline-block mb-1">${(heirInfo.share * 100).toFixed(3)}% <span class="text-xs font-normal text-slate-400">(${fractionalApproximation(heirInfo.share)})</span></p>
-                                    <p class="text-xl font-extrabold text-slate-700">Rp ${heirInfo.amount.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                    <p class="text-sm font-medium text-slate-500">${langData.amount}</p>
+                                    <p class="text-lg font-extrabold text-teal-600">Rp ${info.amount.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                                 </div>
                             </div>
                         </div>
@@ -1553,33 +1244,17 @@
             }
             
             if (!hasAnyHeir && (estateValue > EPSILON || totalHartaPeninggalan <=0) ) { 
-                 resultsDiv.innerHTML += `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md shadow-md" role="alert"><p class="font-bold">Tidak Ada Ahli Waris!</p><p>Berdasarkan input, tidak ada ahli waris yang berhak menerima warisan, atau semua ahli waris terhalang. ${estateValue > EPSILON ? "Harta mungkin diserahkan ke Baitul Mal." : ""}</p></div>`;
-            } else if (hasAnyHeir) {
-                 resultsDiv.innerHTML += `
-                    <div class="neu-flat p-4 border-t-4 border-teal-500 mt-8">
-                        <div class="flex justify-between items-center">
-                             <p class="text-sm text-slate-500">Total Persentase: <span class="font-bold">${(finalTotalSharePercent * 100).toFixed(2)}%</span></p>
-                             <div class="text-right">
-                                <p class="text-lg font-bold text-teal-800">Total Terdistribusi</p>
-                                <p class="text-xl font-extrabold text-teal-900">Rp ${totalDistributedAmount.toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                                <p class="text-xs text-slate-400">Selisih pembulatan: Rp ${((estateValue > 0 ? estateValue : 0) - totalDistributedAmount).toLocaleString('id-ID', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                             </div>
-                        </div>
-                    </div>`;
+                 resultsDiv.innerHTML += `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md shadow-md" role="alert"><p class="font-bold">${langData.alert_no_heir}</p></div>`;
             }
 
-            // Display Hijab results
             if (mahjubHeirs.length > 0) {
-                let hijabListHtml = mahjubHeirs.map(heir => `<li class="pl-2">${heir}</li>`).join('');
+                let list = mahjubHeirs.map(h => `<li>${h.name}</li>`).join('');
                 hijabDiv.innerHTML = `
-                    <div class="hijab-card p-6 mt-8">
-                        <h4 class="text-lg font-bold text-amber-700 mb-2 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                            Ahli Waris Terhalang (Mahjub)
-                        </h4>
-                        <p class="text-sm text-amber-600 mb-3 italic">Ahli waris berikut tidak mendapat bagian karena ada kerabat yang lebih dekat:</p>
-                        <ul class="list-disc list-inside text-amber-800 space-y-1 text-sm font-medium marker:text-amber-500">
-                            ${hijabListHtml}
+                    <div class="neu-flat p-6 mt-6 hijab-card-neu">
+                        <h4 class="text-lg font-bold text-amber-600 mb-2">${langData.mahjub_title}</h4>
+                        <p class="text-sm text-amber-700/70 mb-3 italic">${langData.mahjub_desc}</p>
+                        <ul class="list-disc list-inside text-slate-600 text-sm space-y-1 px-2">
+                            ${list}
                         </ul>
                     </div>
                 `;
@@ -1588,73 +1263,123 @@
         });
 
         document.getElementById('resetButton').addEventListener('click', function() {
-            // Reset input values to default
-            document.getElementById('deceasedName').value = '';
-            document.getElementById('totalHartaPeninggalan').value = '';
-            document.getElementById('hutang').value = '0';
-            document.getElementById('biayaJenazah').value = '0';
-            document.getElementById('wasiat').value = '0';
+            document.querySelectorAll('input').forEach(input => {
+                if(input.type === 'checkbox') input.checked = false;
+                else if(input.type === 'number') input.value = '';
+                else input.value = '';
+            });
             document.getElementById('deceasedGender').value = 'male';
-
-            // Reset heir inputs
-            document.getElementById('hasHusband').checked = false;
-            document.getElementById('numWives').value = '0';
-            document.getElementById('numSons').value = '0';
-            document.getElementById('numDaughters').value = '0';
-            document.getElementById('hasFather').checked = false;
-            document.getElementById('hasMother').checked = false;
-            document.getElementById('hasPaternalGrandfather').checked = false;
-            document.getElementById('hasMaternalGrandmother').checked = false;
-            document.getElementById('hasPaternalGrandmother').checked = false;
-            document.getElementById('numSonSons').value = '0';
-            document.getElementById('numSonDaughters').value = '0';
-            document.getElementById('numFullBrothers').value = '0';
-            document.getElementById('numFullSisters').value = '0';
-            document.getElementById('numPaternalBrothers').value = '0';
-            document.getElementById('numPaternalSisters').value = '0';
-            document.getElementById('numUterineSiblings').value = '0';
-            document.getElementById('numNephewsFromFullBrother').value = '0';
-            document.getElementById('numNephewsFromPaternalBrother').value = '0';
-            document.getElementById('numFullPaternalUncles').value = '0';
-            document.getElementById('numPaternalUnclesFromFather').value = '0';
-            document.getElementById('numSonsOfFullPaternalUncles').value = '0';
-            document.getElementById('numSonsOfPaternalUnclesFromFather').value = '0';
-
-            // Clear result sections
             document.getElementById('summary').innerHTML = '';
             document.getElementById('results').innerHTML = '';
             document.getElementById('hijabSection').innerHTML = '';
             document.getElementById('pdfButtonContainer').style.display = 'none';
+            latestCalculationResult = null;
         });
 
-        function fractionalApproximation(decimal, tolerance = 1.0E-9) { 
-            if (Math.abs(decimal) < EPSILON) return "0/1";
-            let h1=1, h2=0, k1=0, k2=1;
-            let b = decimal;
-            let maxDenominator = 10000; 
-            do {
-                let a = Math.floor(b);
-                let aux = h1; h1 = a*h1+h2; h2 = aux;
-                aux = k1; k1 = a*k1+k2; k2 = aux;
-                if (k1 > maxDenominator) break; 
-                b = 1/(b-a);
-            } while (Math.abs(decimal-h1/k1) > decimal*tolerance && k1 <= maxDenominator && b !== Infinity && !isNaN(b)); 
-            
-            if (k1 === 0 || k1 > maxDenominator || isNaN(h1) || isNaN(k1)) { 
-                for (let den of [2,3,4,6,8,12,18,24,27,36,72, 144, 216, 288, 360]) { 
-                    let num = Math.round(decimal * den);
-                    if (Math.abs(decimal - num/den) < 0.0001) { 
-                        function gcd(a, b) { return b ? gcd(b, Math.abs(a % b)) : Math.abs(a); }
-                        let common = gcd(num, den);
-                        return `${num/common}/${den/common}`;
-                    }
-                }
-                return decimal.toFixed(5); 
+        function generateAndSavePdf() {
+            if (!latestCalculationResult) {
+                alert("Silakan tekan tombol Hitung Warisan terlebih dahulu.");
+                return;
             }
-            return h1+"/"+k1;
+
+            const data = latestCalculationResult;
+            const pdfDoc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            
+            pdfDoc.setFillColor(13, 148, 136);
+            pdfDoc.rect(0, 0, 210, 30, 'F');
+            pdfDoc.setTextColor(255, 255, 255);
+            pdfDoc.setFontSize(18);
+            pdfDoc.setFont(undefined, 'bold');
+            pdfDoc.text("Laporan Waris Islami", 105, 18, { align: 'center' });
+            pdfDoc.setFontSize(10);
+            pdfDoc.setFont(undefined, 'normal');
+            pdfDoc.text("Kalkulator Syariah Indonesia", 105, 25, { align: 'center' });
+            
+            pdfDoc.setTextColor(0, 0, 0);
+            const dateStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric'});
+            pdfDoc.text(`Tanggal: ${dateStr}`, 190, 40, { align: 'right' });
+
+            let y = 50; 
+            const lm = 15;
+            
+            const addText = (txt, x, y, opts={}) => {
+                pdfDoc.setFontSize(opts.size || 10);
+                if(opts.bold) pdfDoc.setFont(undefined, 'bold'); else pdfDoc.setFont(undefined, 'normal');
+                if(opts.italic) pdfDoc.setFont(undefined, 'italic');
+                pdfDoc.setTextColor(opts.col ? opts.col[0] : 0, opts.col ? opts.col[1] : 0, opts.col ? opts.col[2] : 0);
+                
+                const lines = pdfDoc.splitTextToSize(String(txt), 180);
+                if(y + lines.length*6 > 270) { 
+                    pdfDoc.addPage(); y=20; 
+                }
+                pdfDoc.text(lines, x, y, { align: opts.align || 'left' });
+                return y + lines.length*6;
+            };
+
+            y = addText(`Nama Almarhum/ah: ${data.deceasedName}`, lm, y, {bold:true, size:12, col:[13,148,136]});
+            y += 4;
+
+            pdfDoc.setFillColor(240, 253, 250);
+            pdfDoc.rect(lm, y-5, 180, 8, 'F');
+            y = addText("1. Ringkasan Harta & Kewajiban", lm+2, y, {bold:true});
+            y += 2;
+            
+            const fmt = (n) => "Rp " + n.toLocaleString('id-ID');
+            y = addText(`Total Harta: ${fmt(data.totalHarta)}`, lm, y);
+            y = addText(`Hutang: - ${fmt(data.hutang)}`, lm, y);
+            y = addText(`Biaya Jenazah: - ${fmt(data.biayaJenazah)}`, lm, y);
+            y = addText(`Wasiat: - ${fmt(data.wasiat)}`, lm, y);
+            y += 2;
+            y = addText(`Harta Waris Bersih: ${fmt(data.netEstate)}`, lm, y, {bold:true, size:11});
+            y += 6;
+
+            pdfDoc.setFillColor(240, 253, 250);
+            pdfDoc.rect(lm, y-5, 180, 8, 'F');
+            y = addText("2. Hasil Pembagian Waris", lm+2, y, {bold:true});
+            y += 4;
+
+            if (data.heirs.length === 0) {
+                 y = addText("Tidak ada ahli waris yang berhak atau harta habis.", lm, y, {italic:true});
+            } else {
+                data.heirs.forEach(h => {
+                    const label = pdfLabels[h.key] || h.key;
+                    
+                    pdfDoc.setDrawColor(200);
+                    pdfDoc.rect(lm, y-4, 180, 16); // Box
+                    
+                    let tempY = y;
+                    addText(label, lm+2, tempY, {bold:true});
+                    addText(`Bagian: ${h.sharePercent}% (${h.note})`, lm+2, tempY+5, {size:9, col:[80,80,80]});
+                    addText(fmt(h.amount), 190, tempY+2, {bold:true, size:11, align:'right', col:[13,148,136]});
+                    
+                    y += 20; 
+                    if(y > 270) { pdfDoc.addPage(); y=20; }
+                });
+            }
+
+            if(data.mahjub && data.mahjub.length > 0) {
+                y += 5;
+                if(y > 260) { pdfDoc.addPage(); y=20; }
+                pdfDoc.setFillColor(254, 243, 199);
+                pdfDoc.rect(lm, y-5, 180, 8, 'F');
+                y = addText("3. Ahli Waris Terhalang (Mahjub)", lm+2, y, {bold:true});
+                y += 2;
+                data.mahjub.forEach(key => {
+                    const label = pdfLabels[key] || key;
+                    y = addText(`- ${label}`, lm+5, y, {size:9});
+                });
+            }
+
+            const ph = pdfDoc.internal.pageSize.getHeight();
+            pdfDoc.setDrawColor(13, 148, 136);
+            pdfDoc.line(lm, ph-25, 190, ph-25);
+            pdfDoc.setFontSize(8);
+            pdfDoc.text("Dibuat oleh : Ust Hendra & Tim Syariah Waris Indonesia", 105, ph-15, {align:'center'});
+            pdfDoc.text("Disclaimer: Hasil ini adalah estimasi awal. Konsultasikan dengan ulama untuk fatwa final.", 105, ph-10, {align:'center'});
+
+            pdfDoc.save('Laporan_Waris_Islami.pdf');
         }
 
-        // --- Payment Modal Logic (Updated with Neumorphic Classes handling) ---
         const paymentModal = document.getElementById('paymentModal');
         const savePdfButton = document.getElementById('savePdfButton');
         const confirmPaymentButton = document.getElementById('confirmPaymentButton');
@@ -1662,17 +1387,17 @@
 
         savePdfButton.addEventListener('click', () => {
             paymentModal.classList.remove('pointer-events-none', 'opacity-0');
-            paymentModal.classList.add('pointer-events-auto', 'opacity-100');
+            paymentModal.classList.add('pointer-events-auto', 'opacity-100', 'active');
         });
 
         confirmPaymentButton.addEventListener('click', () => {
-            paymentModal.classList.remove('pointer-events-auto', 'opacity-100');
+            paymentModal.classList.remove('pointer-events-auto', 'opacity-100', 'active');
             paymentModal.classList.add('pointer-events-none', 'opacity-0');
             generateAndSavePdf();
         });
 
         closeModalButton.addEventListener('click', () => {
-            paymentModal.classList.remove('pointer-events-auto', 'opacity-100');
+            paymentModal.classList.remove('pointer-events-auto', 'opacity-100', 'active');
             paymentModal.classList.add('pointer-events-none', 'opacity-0');
         });
         
